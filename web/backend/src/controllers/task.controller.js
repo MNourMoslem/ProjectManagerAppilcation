@@ -4,6 +4,7 @@ import { Comment } from "../models/comment.model.js";
 import { Issue } from "../models/issue.model.js";
 import { User } from "../models/user.model.js";
 import { removeTaskFromDB } from "../utils/removeingFromDB.js";
+import { isUserAdminOrOwner } from "../utils/userHasAccess.js";
 
 export const createTask = async (req, res) => {
     const { projectId, title, description, assignedTo, priority, dueDate, tags } = req.body;
@@ -69,10 +70,20 @@ export const getAllTasksOfUser = async (req, res) => {
     try {
         const userId = req.userId; // Get user ID from the auth middleware
         
-        // Find all tasks assigned to the user and populate project information
-        const tasks = await Task.find({ assignedTo: userId })
-            .populate('project', 'name') // Populate only the project name and ID
-            .sort({ createdAt: -1 }); // Sort by creation date, newest first
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ success: false, message: "User not found" });
+        }   
+
+        // Tasks that the user are responsible for are:
+        // 1. Assigned to them
+        // 2. Not assigned to anyone but the user is part of the project
+        const tasks = await Task.find({
+            $or: [
+                { assignedTo: userId }, // Tasks assigned to the user
+                { assignedTo: { $size: 0 }, project: { $in: user.projects } } // Tasks not assigned to anyone but user is part of the project
+            ]
+        });
         
         res.status(200).json({
             success: true,
@@ -87,6 +98,11 @@ export const getTasksOfUser = async (req, res) => {
     try {
         const userId = req.userId; // Get user ID from the auth middleware
         const { from = 0, to = 10, status, priority, projectId } = req.query;
+
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ success: false, message: "User not found" });
+        }
         
         // Build the query
         const query = { assignedTo: userId };
@@ -122,13 +138,21 @@ export const getTasksOfUser = async (req, res) => {
             }
         }
         
-        // Find tasks with the built query
+        // Tasks that the user are responsible for are:
+        // 1. Assigned to them
+        // 2. Not assigned to anyone but the user is part of the project
+        query.$or = [
+            { assignedTo: userId }, // Tasks assigned to the user
+            { assignedTo: { $size: 0 }, project: { $in: user.projects } } // Tasks not assigned to anyone but user is part of the project
+        ];
+
+        // Fetch tasks with pagination
         const tasks = await Task.find(query)
-            .populate('project', 'name') // Populate only the project name and ID
-            .populate('assignedTo', 'name email') // Populate assigned users
-            .sort({ createdAt: -1 }) // Sort by creation date, newest first
-            .skip(parseInt(from)) // Skip the specified number of tasks
-            .limit(parseInt(to) - parseInt(from)); // Limit to the specified range
+            .skip(parseInt(from))
+            .limit(parseInt(to))
+            .createdAt(-1) // Sort by created date descending
+            .populate("project", "name description")
+            .populate("assignedTo", "name email");
         
         res.status(200).json({
             success: true,
@@ -141,7 +165,7 @@ export const getTasksOfUser = async (req, res) => {
 
 export const updateTask = async (req, res) => {
     const { taskId } = req.params;
-    const { title, description, assignedTo, status, priority, dueDate } = req.body;
+    const { title, description, assignedTo, status, priority, dueDate, tags } = req.body;
 
     try {
         if (!taskId) {
@@ -153,8 +177,8 @@ export const updateTask = async (req, res) => {
             return res.status(404).json({ success: false, message: "Task not found" });
         }
 
-        const User = await User.findById(req.userId);
-        if (!User) {
+        const user = await User.findById(req.userId);
+        if (!user) {
             return res.status(404).json({ success: false, message: "User not found" });
         }
 
@@ -164,26 +188,9 @@ export const updateTask = async (req, res) => {
             return res.status(404).json({ success: false, message: "Project not found" });
         }
 
-        let isAdminOrOwner = false;
-        for (const member of project.members) {
-            if (member.toString() === User._id.toString() && (member.role === 'owner' || member.role === 'admin')) {
-                isAdminOrOwner = true;
-                break;
-            }
-        }
-
-        if (!isAdminOrOwner) {
+        if (!isUserAdminOrOwner(user, project)) {
             return res.status(403).json({ success: false, message: "User does not have permission to update this task" });
         }
-
-        // Gather updated fields for activity log
-        const updatedFields = [];
-        if (title && title !== task.title) updatedFields.push("title");
-        if (description && description !== task.description) updatedFields.push("description");
-        if (status && status !== task.status) updatedFields.push("status");
-        if (priority && priority !== task.priority) updatedFields.push("priority");
-        if (dueDate && dueDate !== task.dueDate) updatedFields.push("dueDate");
-        if (assignedTo && JSON.stringify(assignedTo) !== JSON.stringify(task.assignedTo)) updatedFields.push("assignedTo");
 
         // Update task fields
         task.title = title || task.title;
@@ -192,6 +199,7 @@ export const updateTask = async (req, res) => {
         task.status = status || task.status;
         task.priority = priority || task.priority;
         task.dueDate = dueDate || task.dueDate;
+        task.tags = tags || task.tags;
 
         await task.save();
 
@@ -243,6 +251,7 @@ export const getTaskById = async (req, res) => {
 
         const task = await Task.findById(taskId)
             .populate("assignedTo", "name email")
+            .populate("submitionMessage.member", "name email")
 
         if (!task) {
             return res.status(404).json({ success: false, message: "Task not found" });
@@ -367,7 +376,7 @@ export const changeTaskStatus = async (req, res) => {
 
 export const submitTask = async (req, res) => {
     const { taskId } = req.params;
-    const { message } = req.body;
+    const { message, type, files = [] } = req.body;
 
     try {
         if (!taskId) {
@@ -423,13 +432,12 @@ export const submitTask = async (req, res) => {
         }
 
         // Update task status and submission message
-        const oldStatus = task.status;
-        task.status = "done";
+        task.status = type === 'submition' ? "done" : "cancelled";
         task.submitionMessage = {
             member: req.userId,
-            type: "submition",
+            type: type,
             massege: message || "",
-            files: []
+            files: files || []
         };
 
         await task.save();
@@ -437,20 +445,6 @@ export const submitTask = async (req, res) => {
         // Return the updated task with populated fields
         const updatedTask = await Task.findById(taskId)
             .populate("assignedTo", "name email")
-            .populate({
-                path: "comments",
-                populate: {
-                    path: "user",
-                    select: "name email"
-                }
-            })
-            .populate({
-                path: "issues",
-                populate: {
-                    path: "owner lastStatusChangedBy",
-                    select: "name email"
-                }
-            })
             .populate("submitionMessage.member", "name email");
 
         res.status(200).json({
@@ -463,82 +457,6 @@ export const submitTask = async (req, res) => {
     }
 }
 
-export const rejectTask = async (req, res) => {
-    const { taskId } = req.params;
-    const { message } = req.body;
-
-    try {
-        if (!taskId) {
-            throw new Error("Task ID is required");
-        }
-
-        if (!message) {
-            throw new Error("Rejection message is required");
-        }
-
-        const task = await Task.findById(taskId);
-        if (!task) {
-            return res.status(404).json({ success: false, message: "Task not found" });
-        }
-
-        const user = await User.findById(req.userId);
-        if (!user) {
-            return res.status(404).json({ success: false, message: "User not found" });
-        }
-
-        // Check if the user can reject this task (only owner/admin)
-        const project = await Project.findById(task.project);
-        if (!project) {
-            return res.status(404).json({ success: false, message: "Project not found" });
-        }
-
-        // Check if user is owner or admin
-        const userRole = project.memberRoles.find(mr => mr.user.toString() === req.userId);
-        if (!userRole || (userRole.role !== 'owner' && userRole.role !== 'admin')) {
-            return res.status(403).json({ 
-                success: false, 
-                message: "Only project owners and admins can reject tasks" 
-            });
-        }
-
-        // Update task with rejection message
-        task.submitionMessage = {
-            member: req.userId,
-            type: "rejection",
-            massege: message,
-            files: []
-        };
-
-        await task.save();
-
-        // Return the updated task with populated fields
-        const updatedTask = await Task.findById(taskId)
-            .populate("assignedTo", "name email")
-            .populate({
-                path: "comments",
-                populate: {
-                    path: "user",
-                    select: "name email"
-                }
-            })
-            .populate({
-                path: "issues",
-                populate: {
-                    path: "owner lastStatusChangedBy",
-                    select: "name email"
-                }
-            })
-            .populate("submitionMessage.member", "name email");
-
-        res.status(200).json({
-            success: true,
-            message: "Task rejected successfully",
-            task: updatedTask,
-        });
-    } catch (error) {
-        res.status(400).json({ success: false, message: error.message });
-    }
-}
 
 export const addComment = async (req, res) => {
     const { taskId } = req.params;

@@ -98,7 +98,7 @@ export const acceptInviteMail = async (req, res) => {
         }
 
         try {
-            addMemberToProject(project, user, 'member');
+            addMemberToProject(project, user, mail.projectRole);
         }
         catch (error) {
             return res.status(400).json({ success: false, message: error.message });

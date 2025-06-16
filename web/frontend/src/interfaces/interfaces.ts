@@ -77,7 +77,7 @@ export interface SumbitionMessage
 export interface Task
 {
     _id: string;
-    projectId: string; // ID of the project this task belongs to
+    project: string; // ID of the project this task belongs to
     title: string;
     description?: string;
     status: 'todo' | 'in-progress' | 'done'; // Task status

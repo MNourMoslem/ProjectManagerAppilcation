@@ -17,11 +17,12 @@ import { Project, Task } from '../interfaces/interfaces';
 import TasksTable from '../components/tables/TasksTable';
 import MemberTable from '../components/tables/MemberTable';
 import { TabContainer } from '../components/containers';
+import { useAuthStore } from '../store/authStore';
 
 const ProjectDetailsPage = () => {
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
-    const [project, setProject] = useState<Project | null>(null);
+  const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
@@ -35,6 +36,7 @@ const ProjectDetailsPage = () => {
   const [taskToDelete, setTaskToDelete] = useState<Task | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [userIsMember, setUserIsMember] = useState(false);  // Use any to avoid TypeScript errors while maintaining the component functionality
+  const [userRoleInProject, setUserMemberInProject] = useState("member");
   const { 
     currentProject,
     tasks,
@@ -50,20 +52,33 @@ const ProjectDetailsPage = () => {
     deleteProject,
     leaveProject
   } = useProjectStore() as any;// Load project data
+
+  const {
+    user,
+  } = useAuthStore();
+
+  const isUserOwner = () => {
+    return userRoleInProject === 'owner';
+  }
+
+  const isUserOwnerOrAdmin = () => {
+    return userRoleInProject === 'owner' || userRoleInProject === 'admin';
+  }
+
   useEffect(() => {
     if (projectId) {
       setLoading(true);
       
       // Use the already destructured methods from the top level
       fetchProjectById(projectId)
-        .then(() => {
-          fetchProjectTasks(projectId);
-          fetchProjectMembers(projectId);
-        })
-        .catch((err: Error) => {
-          setError(err.message || 'Failed to load project');
-        })
-        .finally(() => setLoading(false));
+      .then(() => {
+        fetchProjectTasks(projectId);
+        fetchProjectMembers(projectId);
+      })
+      .catch((err: Error) => {
+        setError(err.message || 'Failed to load project');
+      })
+      .finally(() => setLoading(false));
     }
   }, [projectId, fetchProjectById, fetchProjectTasks, fetchProjectMembers]);
   
@@ -76,6 +91,16 @@ const ProjectDetailsPage = () => {
       if (members && members.length > 0) {
         // This is a simplified check - in a real app, you'd compare with the current user's ID
         setUserIsMember(true);
+      }
+
+      if (members && user) {
+        const member = members.find((m: any) => m._id === user._id);
+        if (member) {
+          setUserMemberInProject(member.role);
+          setUserIsMember(true);
+        } else {
+          setUserIsMember(false);
+        }
       }
     }
   }, [currentProject, members]);
@@ -100,6 +125,20 @@ const ProjectDetailsPage = () => {
       });
     }
   };
+
+  const handleTaskModifyCondition = (task: Task) => {
+    // if task is done, prevent editing
+    if (task.status === 'done') {
+      return false;
+    }
+
+    // if user role is not admin or owner, prevent editing
+    if (!isUserOwnerOrAdmin()) {
+      return false;
+    }
+
+    return true;
+  }
   
   // Handle project deletion
   const handleDeleteProject = () => {
@@ -248,23 +287,29 @@ const ProjectDetailsPage = () => {
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{project.name}</h1>
         </div>
         
-        <div className="flex items-center space-x-2">          {userIsMember && (
+        <div className="flex items-center space-x-2">          
+          {userIsMember && !isUserOwner() && (
             <DangerButton
               text="Leave Project"
               size="sm"
               onClick={() => setIsLeaveConfirmOpen(true)}
             />
-          )}          <OutlineButton
-            text="Delete"
-            variant="danger"
-            size="sm"
-            onClick={() => setIsDeleteConfirmOpen(true)}
-          />
-          <PrimaryButton
-            text="Edit Project"
-            size="sm"
-            onClick={() => setIsEditModalOpen(true)}
-          />
+          )}          
+          {isUserOwner() && (
+            <>
+              <OutlineButton
+                text="Delete"
+                variant="danger"
+                size="sm"
+                onClick={() => setIsDeleteConfirmOpen(true)}
+              />
+              <PrimaryButton
+                text="Edit Project"
+                size="sm"
+                onClick={() => setIsEditModalOpen(true)}
+              />
+            </>
+          )}
         </div>
       </div>
       
@@ -359,11 +404,12 @@ const ProjectDetailsPage = () => {
                 <Card>
                   <div className="flex justify-between items-center mb-4">
                     <h2 className="text-lg font-medium">Team Members</h2>
-                    <PrimaryButton
+                    {isUserOwner() &&
+                     <PrimaryButton
                       text="Invite Member"
                       size="xs"
                       onClick={() => setIsAddMemberModalOpen(true)}
-                    />
+                    />}
                   </div>
                   
                   <MemberTable
@@ -385,17 +431,20 @@ const ProjectDetailsPage = () => {
                 <Card>
                   <div className="flex justify-between items-center mb-4">
                     <h2 className="text-lg font-medium">Project Tasks</h2>
+                    {isUserOwnerOrAdmin() && 
                     <PrimaryButton
                       text="Add Task"
                       size="xs"
                       onClick={() => setIsAddTaskModalOpen(true)}
-                    />
+                    />}
                   </div>
                   
                   <TasksTable 
                     tasks={tasks}
                     onEdit={(task) => setSelectedTaskForEdit(task)}
+                    onEditCondition={handleTaskModifyCondition}
                     onDelete={(task) => setTaskToDelete(task)}
+                    onDeleteCondition={handleTaskModifyCondition}
                   />
                 </Card>
               </div>
@@ -559,6 +608,7 @@ const ProjectDetailsPage = () => {
               priority: selectedTaskForEdit.priority,
               dueDate: selectedTaskForEdit.dueDate,
               assignedTo: selectedTaskForEdit.assignedTo.map(member => member._id),
+              tags: selectedTaskForEdit.tags || []
             }}
             onSubmit={(data) => handleEditTask(selectedTaskForEdit._id, data)}
             isSubmitting={isSubmitting}

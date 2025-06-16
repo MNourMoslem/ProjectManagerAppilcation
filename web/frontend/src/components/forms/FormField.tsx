@@ -1,4 +1,5 @@
 import { ReactNode, forwardRef } from 'react';
+import { MouseEventHandler } from 'react';
 
 interface FormFieldProps {
   label: string;
@@ -183,23 +184,106 @@ export const TagInput = forwardRef<HTMLInputElement, TagInputProps>(
 
 TagInput.displayName = 'TagInput';
 
-interface DateInputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'type'> {
+interface DateInputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'type' | 'value' | 'onChange'> {
   error?: boolean;
+  value: string | null;
+  onChange: (e : React.ChangeEvent<HTMLInputElement>) => void;
+  placeholderText?: string;
+  formatDisplay?: boolean;
 }
 
 export const DateInput = forwardRef<HTMLInputElement, DateInputProps>(
-  ({ className = '', error, ...props }, ref) => {
+  ({ 
+    className = '', 
+    error, 
+    value, 
+    onChange, 
+    disabled = false,
+    placeholderText = 'Select a date',
+    formatDisplay = false,
+    ...props   }, ref) => {
+    const inputRef = useRef<HTMLInputElement>(null);
+    
+    // Combine the forwarded ref with our local ref
+    useImperativeHandle(ref, () => inputRef.current as HTMLInputElement);
+
+    // Format date for display
+    const formatDate = (dateString: string | null): string => {
+      if (!dateString) return '';
+      if (!formatDisplay) return dateString;
+      
+      try {
+        const date = new Date(dateString);
+        return date.toLocaleDateString(undefined, { 
+          year: 'numeric', 
+          month: 'short', 
+          day: 'numeric' 
+        });
+      } catch (e) {
+        return dateString;
+      }
+    };
+
+    // Format date for input value (yyyy-MM-dd)
+    const getInputValue = (): string => {
+      if (!value) return '';
+      try {
+        const date = new Date(value);
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+      } catch (e) {
+        return value;
+      }
+    };
+
     return (
-      <input
-        ref={ref}
-        type="date"
-        className={`w-full px-3 py-2 text-xs border rounded-md 
-          ${error ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 dark:border-gray-700 focus:ring-blue-500'} 
-          focus:border-transparent focus:outline-none focus:ring-1
-          bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 
-          ${className}`}
-        {...props}
-      />
+      <div className="relative">
+        <div className={`relative flex items-center ${disabled ? 'opacity-60' : ''}`}>
+          <input
+            ref={inputRef}
+            type="date"
+            className={`w-full px-3 py-2 text-xs border rounded-md 
+              ${error ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 dark:border-gray-700 focus:ring-blue-500'} 
+              focus:border-transparent focus:outline-none focus:ring-1
+              bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 
+              ${formatDisplay ? 'opacity-0 absolute inset-0 z-10' : ''}
+              ${className}`}
+            value={getInputValue()}
+            onChange={onChange}
+            disabled={disabled}
+            {...props}
+          />
+          
+          {formatDisplay && (
+            <div 
+              className={`w-full px-3 py-2 text-xs border rounded-md flex items-center justify-between
+                ${error ? 'border-red-500' : 'border-gray-300 dark:border-gray-700'} 
+                bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100`}
+            >
+              <span className={value ? '' : 'text-gray-400 dark:text-gray-500'}>
+                {value ? formatDate(value) : placeholderText}
+              </span>
+              <div className="flex items-center">
+                {value && (
+                  <button
+                    type="button"
+                    className="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 mr-1"
+                  >
+                    <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                )}
+                <svg className="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
     );
   }
 );
@@ -207,4 +291,4 @@ export const DateInput = forwardRef<HTMLInputElement, DateInputProps>(
 DateInput.displayName = 'DateInput';
 
 // Add useState import
-import { useState } from 'react';
+import { useState, useRef, useImperativeHandle } from 'react';

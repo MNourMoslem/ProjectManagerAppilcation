@@ -348,13 +348,18 @@ export const getUserRoleInProject = async (req, res) => {
 
     try {
         const project = await Project.findById(projectId)
-            .populate("memberRoles.user", "name email");
         if (!project) {
             return res.status(404).json({ success: false, message: "Project not found" });
         }
-        const userRole = project.memberRoles.find(role => role.user._id.toString() === req.userId);
+
+        const user = await User.findById(req.userId);
+        if (!user) {
+            return res.status(404).json({ success: false, message: "User not found" });
+        }
+
+        const userRole = project.memberRoles.find(role => role.user.toString() === user._id.toString());
         if (!userRole) {
-            return res.status(404).json({ success: false, message: "User not found in project" });
+            return res.status(404).json({ success: false, message: "User is not a member of this project" });
         }
 
         res.status(200).json({

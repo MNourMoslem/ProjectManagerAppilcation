@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { format, set } from 'date-fns';
+import { format } from 'date-fns';
 import { useProjectStore } from '../store/projectStore';
 import { Card } from '../components/cards';
 import { 
@@ -16,7 +16,7 @@ import Modal from '../components/modals/Modal';
 import { TaskForm, TaskFormData } from '../components/forms/TaskForm';
 import { FormField, Textarea } from '../components/forms/FormField';
 import { Project, Task, Comment, Issue } from '../interfaces/interfaces';
-
+import { useAuthStore } from '../store/authStore';
 
 // Component to display comments
 const CommentItem = ({ comment }: { comment: Comment }) => {
@@ -115,7 +115,7 @@ const TaskPage = () => {
   const navigate = useNavigate();
   
   // State
-  const [projectId, setProjectId] = useState<string | null>(null);
+  const [projectId, setProjectId] = useState<string>("");
   const [project, setProject] = useState<Project | null>(null);
   const [task, setTask] = useState<Task | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
@@ -123,9 +123,7 @@ const TaskPage = () => {
   
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [userRole, setUserRole] = useState<'owner' | 'admin' | 'member' | null>(null);
-  const [canManageTask, setCanManageTask] = useState(false);
-  const [canSubmitTask, setCanSubmitTask] = useState(false);
+  const [userRole, setUserRole] = useState<'owner' | 'admin' | 'member' | null>('member');
   
   // Comment state
   const [newComment, setNewComment] = useState('');
@@ -145,7 +143,21 @@ const TaskPage = () => {
   const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false);
   const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
   const [isAddIssueModalOpen, setIsAddIssueModalOpen] = useState(false);
+  const [isAddCommentModalOpen, setIsAddCommentModalOpen] = useState(false);
   
+  const {
+    user
+  } = useAuthStore();
+
+  const isUserOwnerOrAdmin = () => userRole === 'owner' || userRole === 'admin';
+  const isUserPartOfTask = () => {
+    if (!task?.assignedTo || task.assignedTo.length === 0)
+      return true;
+
+    return task.assignedTo.some(responsibleUser => responsibleUser._id === user?._id);
+  };
+  const isTaskOpen = () => task?.status === 'todo' || task?.status === 'in-progress';
+
   // Get task management functions from the store
   const {
     currentProject,
@@ -168,54 +180,55 @@ const TaskPage = () => {
   
   // Load task data
   useEffect(() => {
-    const projectId = currentProject?._id || null;
-    setProjectId(projectId);
-    setProject(currentProject);
-
-    if (taskId && projectId) {
+    if (taskId) {
       setLoading(true);
-      
-      // Fetch task details
       fetchTaskById(taskId)
         .then(taskData => {
           setTask(taskData);
-          return getUserRole(projectId);
-        }).then(role => {
-            setUserRole(role as 'owner' | 'admin' | 'member' | null);
-            setCanManageTask(role === 'owner' || role === 'admin');
-            setCanSubmitTask(role === 'owner' || role === 'admin' || role === 'member');
-        }).then(() => {
-            // Get task issues and comments
-            return Promise.all([
-                getTaskComments(taskId),
-                getTaskIssues(taskId),
-            ]);
-        }).then(([taskComments, taskIssues]) => {
+          setProjectId(taskData.project);
+        })
+        .then(() => {
+          return Promise.all([
+              getTaskComments(taskId),
+              getTaskIssues(taskId),
+          ]);
+        })
+        .then(([taskComments, taskIssues]) => {
             setComments(taskComments);
             setIssues(taskIssues);
         })
         .catch(err => {
           setError(err.message || 'Failed to load task details');
         })
-        .finally(() => {
-          setLoading(false);
-        });
     }
     else
     {
-      if (!taskId)
-      {
-        setError("Invalid Task Id");
-      }
-      else{
-        setError("Invalid Project Id");
-      }
-
+      setError("Invalid Task Id");
       setLoading(false);
     }
   }, [taskId, fetchTaskById]);
+
+  useEffect(() => {
+    if (projectId) {
+      fetchProjectById(projectId)
+        .then(() => {
+          setProject(currentProject);
+        })
+        .then(async () => {
+          const role = await getUserRole(projectId);
+          setUserRole(role as 'owner' | 'admin' | 'member' | null);
+        })
+        .catch(err => {
+          setError(err.message || 'Failed to load project details');
+        }).finally(() => {
+          setLoading(false)
+        });
+    }
+    console.log("Project ID:", projectId);
+  }, [projectId]);
   
   // Handle comment submission
+  // Update handleAddComment function (around line 245)
   const handleAddComment = () => {
     if (!newComment.trim() || !taskId) return;
     
@@ -224,6 +237,11 @@ const TaskPage = () => {
       .then(updatedTask => {
         setTask(updatedTask ?? null);
         setNewComment('');
+        setIsAddCommentModalOpen(false); // Close modal after comment is added
+      })
+      .then(() => getTaskComments(taskId)) // Refresh comments
+      .then(taskComments => {
+        setComments(taskComments);
       })
       .finally(() => {
         setSubmittingComment(false);
@@ -410,7 +428,7 @@ const TaskPage = () => {
         </div>
         
         <div className="flex items-center gap-2">
-          {canManageTask && (
+          {isUserOwnerOrAdmin() && (
             <SecondaryButton
               text="Edit Task"
               size="sm"
@@ -419,7 +437,7 @@ const TaskPage = () => {
           )}
           
           {/* Task Actions */}
-          {canSubmitTask && task.status === 'todo' && (
+          {isUserPartOfTask() && task.status === 'todo' && (
             <PrimaryButton
               text="Start Working"
               size="sm"
@@ -428,7 +446,7 @@ const TaskPage = () => {
             />
           )}
           
-          {canSubmitTask && task.status === 'in-progress' && (
+          {isUserPartOfTask() && task.status === 'in-progress' && (
             <div className="flex items-center gap-2">
               <OutlineButton
                 text="Reject"
@@ -579,13 +597,13 @@ const TaskPage = () => {
           <Card className="mb-6">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-lg font-medium">Issues {issues.length > 0 && `(${issues.length})`}</h2>
-              <div className="flex items-center gap-2">
+              {isTaskOpen() && <div className="flex items-center gap-2">
                 <PrimaryButton
                   text="Report Issue"
                   size="xs"
                   onClick={() => setIsAddIssueModalOpen(true)}
                 />
-              </div>
+              </div>}
             </div>
             
             {issues.length === 0 ? (
@@ -601,7 +619,7 @@ const TaskPage = () => {
                   <IssueItem 
                     key={issue._id} 
                     issue={issue} 
-                    canManageIssue={canManageTask} 
+                    canManageIssue={isUserOwnerOrAdmin()} 
                     onStatusChange={handleIssueStatusChange} 
                   />
                 ))}
@@ -611,41 +629,32 @@ const TaskPage = () => {
           
           {/* Comments section */}
           <Card>
-            <h2 className="text-lg font-medium mb-4">Comments {comments.length > 0 && `(${comments.length})`}</h2>
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg font-medium">Comments {comments.length > 0 && `(${comments.length})`}</h2>
+              {isTaskOpen() && (
+                <PrimaryButton
+                  text="Add Comment"
+                  size="xs"
+                  onClick={() => setIsAddCommentModalOpen(true)}
+                />
+              )}
+            </div>
             
             {/* Comment list */}
-            {comments.length > 0 && (
-              <div className="divide-y divide-gray-100 dark:divide-gray-800 mb-4">
+            {comments.length > 0 ? (
+              <div className="divide-y divide-gray-100 dark:divide-gray-800">
                 {comments.map(comment => (
                   <CommentItem key={comment._id} comment={comment} />
                 ))}
               </div>
-            )}
-            
-            {/* Add comment form */}
-            <div>
-              <FormField
-                label="Add a Comment"
-                htmlFor="newComment"
-              >
-                <Textarea
-                  id="newComment"
-                  value={newComment}
-                  onChange={(e) => setNewComment(e.target.value)}
-                  placeholder="Write your comment..."
-                  rows={3}
-                />
-              </FormField>
-              <div className="flex justify-end mt-2">
-                <PrimaryButton
-                  text="Add Comment"
-                  size="sm"
-                  onClick={handleAddComment}
-                  disabled={!newComment.trim() || submittingComment}
-                  loading={submittingComment}
-                />
+            ) : (
+              <div className="p-4 text-center text-gray-500 dark:text-gray-400">
+                <svg className="w-12 h-12 mx-auto text-gray-300 dark:text-gray-600 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                </svg>
+                <p>No comments</p>
               </div>
-            </div>
+            )}
           </Card>
         </div>
         
@@ -693,6 +702,7 @@ const TaskPage = () => {
               description: task.description,
               priority: task.priority,
               dueDate: task.dueDate,
+              tags: task.tags || [],
               assignedTo: task.assignedTo.map(user => user._id),
             }}
             onSubmit={handleEditTask}
@@ -808,6 +818,38 @@ const TaskPage = () => {
               value={newIssueDescription}
               onChange={(e) => setNewIssueDescription(e.target.value)}
               placeholder="Describe the issue in detail..."
+              rows={4}
+            />
+          </FormField>
+        </div>
+      </Modal>
+
+      {/* Add Comment Modal */}
+      <Modal
+        isOpen={isAddCommentModalOpen}
+        onClose={() => setIsAddCommentModalOpen(false)}
+        title="Add Comment"
+        primaryAction={{
+          text: "Post Comment",
+          onClick: handleAddComment,
+          loading: submittingComment,
+          disabled: !newComment.trim()
+        }}
+        secondaryAction={{
+          text: "Cancel",
+          onClick: () => setIsAddCommentModalOpen(false)
+        }}
+      >
+        <div className="p-4">
+          <FormField
+            label="Your Comment"
+            htmlFor="newComment"
+          >
+            <Textarea
+              id="newComment"
+              value={newComment}
+              onChange={(e) => setNewComment(e.target.value)}
+              placeholder="Write your comment..."
               rows={4}
             />
           </FormField>

@@ -4,7 +4,6 @@ import {
   ExpandingDropdown,
   DropdownItem
 } from '../dropdowns';
-import { PrimaryButton } from '../buttons';
 import type { DropdownItemProps } from '../dropdowns';
 import { useAuthStore } from '../../store/authStore';
 import { useEffect } from 'react';
@@ -145,15 +144,6 @@ function Sidebar() {
             />
           </div>
         </div>
-      </div>      {/* Sidebar footer with create button */}
-      <div className="p-3 border-t border-gray-100 dark:border-gray-800">
-        <PrimaryButton 
-          text="New"
-          icon={<svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>}
-          className="w-full text-xs py-1"
-          size="xs"
-          onClick={() => navigate('/app/projects/new')}
-        />
       </div>
     </div>
   );

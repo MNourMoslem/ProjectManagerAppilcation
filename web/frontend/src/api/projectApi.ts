@@ -174,13 +174,13 @@ export const taskAPI = {
   },
   
   // Submit a task (mark as done with submission message)
-  submitTask: async (taskId: string, message: string) => {
-    return apiCall(`/tasks/${taskId}/submit`, 'POST', { message });
+  submitTask: async (taskId: string, message: string, files? : string[]) => {
+    return apiCall(`/tasks/${taskId}/submit`, 'POST', { message, type : 'submition', files });
   },
   
   // Reject a task (keep as in-progress with rejection message)
-  rejectTask: async (taskId: string, message: string) => {
-    return apiCall(`/tasks/${taskId}/reject`, 'POST', { message });
+  rejectTask: async (taskId: string, message: string, files? : string[]) => {
+    return apiCall(`/tasks/${taskId}/reject`, 'POST', { message, type : 'rejection', files });
   },
 
   // Get comments for a task

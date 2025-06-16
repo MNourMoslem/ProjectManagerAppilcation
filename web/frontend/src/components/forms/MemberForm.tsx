@@ -146,7 +146,7 @@ export const MemberForm = ({
             className="px-4 py-2 bg-black text-white dark:bg-white dark:text-black rounded-md hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors"
             disabled={isSubmitting}
           >
-            Add Member
+            Invite Member
           </button>
         )}
       </div>

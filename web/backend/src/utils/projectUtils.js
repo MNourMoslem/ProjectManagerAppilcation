@@ -10,7 +10,7 @@ export const addMemberToProject = async (project, user, role = "member") => {
 
     // Add user to project members
     project.members.push(user._id);
-    project.memberRoles[user._id] = role;
+    project.memberRoles.push({ user: user._id, role });
 
     user.projects.push(project._id);
 

@@ -4,11 +4,12 @@ import { format } from 'date-fns';
 import { Task, Project } from '../../interfaces/interfaces';
 
 interface TaskCardProps {
-  task: Task & { project?: Project | string };
+  task: Task;
+  project?: Project;
   loading?: boolean;
 }
 
-const TaskCard: FC<TaskCardProps> = ({ task, loading = false }) => {
+const TaskCard: FC<TaskCardProps> = ({ task, project, loading = false }) => {
   const navigate = useNavigate();
 
   if (loading) {
@@ -88,19 +89,19 @@ const TaskCard: FC<TaskCardProps> = ({ task, loading = false }) => {
           <button 
             onClick={(e) => {
               e.stopPropagation();
-              navigate(`/app/projects/${typeof task.project === 'string' ? task.project : task.project?._id}`);
+              navigate(`/app/projects/${task.project}`);
             }}
             className="text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:underline mb-4 inline-block"
           >
-            {typeof task.project === 'object' && task.project?.name ? task.project.name : 'View Project'}
+            {typeof task.project === 'object' && project?.name ? project.name : 'View Project'}
           </button>
         )}
         
-        {!task.project && task.projectId && (
+        {!task.project && task.project && (
           <button 
             onClick={(e) => {
               e.stopPropagation();
-              navigate(`/app/projects/${task.projectId}`);
+              navigate(`/app/projects/${task.project}`);
             }}
             className="text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:underline mb-4 inline-block"
           >

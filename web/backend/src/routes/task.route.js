@@ -9,7 +9,6 @@ import {
     unassignTaskFromUser,
     changeTaskStatus,
     submitTask,
-    rejectTask,
     addComment,
     addIssue,
     updateIssueStatus,
@@ -41,7 +40,6 @@ router.post  ('/:taskId/assign'            , assignTaskToUser    , userPartOfPro
 router.post  ('/:taskId/unassign'          , unassignTaskFromUser, userPartOfProjectByTask                  );
 router.post  ('/:taskId/status'            , changeTaskStatus    , userPartOfProjectByTask                  );
 router.post  ('/:taskId/submit'            , submitTask          , userPartOfProjectByTask                  );
-router.post  ('/:taskId/reject'            , rejectTask          , userPartOfProjectByTask                  );
 router.post  ('/:taskId/comments'          , addComment          , userPartOfProjectByTask                  );
 router.post  ('/:taskId/issues'            , addIssue            , userPartOfProjectByTask                  );
 router.put   ('/:taskId/issues/:issueId/status', updateIssueStatus , userPartOfProjectByTask                );

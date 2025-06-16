@@ -517,9 +517,7 @@ export const useProjectStore = create<ProjectState>((set, get) => ({  // Initial
   fetchTaskById: async (taskId: string) => {
     set({ tasksLoading: true, tasksError: null });
     try {
-      console.log("Fetching Task by ID:", taskId);
       const response = await taskAPI.getById(taskId);
-      console.log("Task Fetch Response:", response);
       if (response.success) {
         return response.task;
       } else {

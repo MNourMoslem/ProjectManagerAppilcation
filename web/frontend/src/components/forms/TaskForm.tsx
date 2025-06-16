@@ -136,7 +136,7 @@ export const TaskForm = ({
               <DateInput
                 id="dueDate"
                 name="dueDate"
-                value={formData.dueDate?.toString() || ''}
+                value={formData.dueDate ? formData.dueDate.toString() : ''}
                 onChange={handleChange}
                 disabled={isSubmitting}
               />
