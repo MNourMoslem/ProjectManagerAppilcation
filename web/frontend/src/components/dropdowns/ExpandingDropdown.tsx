@@ -7,8 +7,9 @@ function ExpandingDropdown({
   items,
   size = 'md',
   className = '',
+  defaultOpen = false
 }: DropdownProps) {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(defaultOpen);
   const contentRef = useRef<HTMLDivElement>(null);
   
   // Calculate max height for animation

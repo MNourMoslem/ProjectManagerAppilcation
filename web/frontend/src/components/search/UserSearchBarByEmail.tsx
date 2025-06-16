@@ -19,26 +19,25 @@ interface UserSearchBarByEmailProps {
   className?: string;
   selectedUsers?: User[];
   onUserRemove?: (userId: string) => void;
-  searchOnEnterOnly?: boolean;
 }
 
 const UserSearchBarByEmail: React.FC<UserSearchBarByEmailProps> = ({
-  onUserSelect,
-  placeholder = 'Search users by email...',
+  onUserSelect,  placeholder = 'Search users by email...',
   variant = 'default',
   size = 'md',
   showRecentSearches = true,
   className = '',
   selectedUsers = [],
   onUserRemove,
-  searchOnEnterOnly = false,
-}) => {
-  const [searchTerm, setSearchTerm] = useState('');
+}) => {const [searchTerm, setSearchTerm] = useState('');
   const [searchResults, setSearchResults] = useState<User[]>([]);
   const [recentSearches, setRecentSearches] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
   const abortControllerRef = useRef<AbortController | null>(null);
+  
+  // Store formatted suggestions in a state to prevent regeneration on every render
+  const [formattedSuggestions, setFormattedSuggestions] = useState<any[]>([]);
 
   // Fetch recent searches on component mount
   useEffect(() => {
@@ -76,12 +75,15 @@ const UserSearchBarByEmail: React.FC<UserSearchBarByEmailProps> = ({
     setHasSearched(true);
 
     try {
+      console.log('Searching for users with email:', email); // Debug log
       const data = await userAPI.getByEmail(email);
       console.log('Search response:', data); // Debug log
+      
       if (data.success) {
-        setSearchResults(data.users);
+        setSearchResults(data.users || []);
       } else {
         setSearchResults([]);
+        console.error('Error from API:', data.message);
       }
     } catch (error) {
       // Type narrowing for the error
@@ -131,6 +133,11 @@ const UserSearchBarByEmail: React.FC<UserSearchBarByEmailProps> = ({
     console.log('Search suggestions:', searchSuggestions); // Debug log
     return searchSuggestions;
   };
+
+  // Update formatted suggestions when search results or recent searches change
+  useEffect(() => {
+    setFormattedSuggestions(formatSuggestions());
+  }, [searchResults, recentSearches, searchTerm]);
   // Custom render function for suggestions
   const renderSuggestion = (suggestion: any, isActive: boolean, _query: string) => {
     const user = suggestion.userData;
@@ -149,16 +156,15 @@ const UserSearchBarByEmail: React.FC<UserSearchBarByEmailProps> = ({
       </div>
     );
   };
-
   return (
     <div className={className}>      <Searchbar
         value={searchTerm}
         onChange={(value) => {
           setSearchTerm(value);
-          // Don't call searchUsers here - let the Searchbar handle debouncing
+          // When value changes, we will not automatically search
         }}
         onSearch={(value) => {
-          // This gets called after debounce (if not searchOnEnterOnly) or on Enter
+          // This gets called after debounce or on Enter
           searchUsers(value);
         }}
         placeholder={placeholder}
@@ -166,14 +172,18 @@ const UserSearchBarByEmail: React.FC<UserSearchBarByEmailProps> = ({
         size={size}
         showSearchIcon={true}
         debounceTime={300}
-        suggestions={formatSuggestions()}
+        suggestions={formattedSuggestions}
         showSuggestions={true}
         loadingSuggestions={isLoading}
         noSuggestionsMessage={hasSearched ? "No users found" : (searchTerm.trim() ? "Type email and press Enter to search" : "Type to search users")}
         onSuggestionSelect={(suggestion: any) => handleUserSelect(suggestion.userData)}
         highlightMatches={true}
         renderSuggestion={renderSuggestion}
-        searchOnEnterOnly={searchOnEnterOnly}
+        searchOnEnterOnly={true} // Always use Enter to search to avoid partial email searches
+        onEnter={(value) => {
+          console.log('Enter pressed with value:', value);
+          searchUsers(value);
+        }}
       />
       
       {/* Display selected users if any */}

@@ -25,6 +25,7 @@ import UIComponentsShowcase from './UIComponentsShowcase';
 import ContainersShowcase from './ContainersShowcase';
 import SearchbarShowcase from './SearchbarShowcase';
 import InboxPage from './InboxPage';
+import WorkspaceAnalyticsPage from './WorkspaceAnalyticsPage';
 import Page2 from './Page2';
 
 const AppRoutes = () => {
@@ -36,33 +37,38 @@ const AppRoutes = () => {
         <Route path="button-showcase" element={<ButtonsShowCase />} />
         <Route path="dropdown-showcase" element={<DropdownShowcase />} />
         <Route path="table-showcase" element={<TableShowcase />} />
-        <Route path="forms-showcase" element={<FormsShowcase />} />        <Route path="progress-showcase" element={<ProgressShowcase />} />
+        <Route path="forms-showcase" element={<FormsShowcase />} />        
+        <Route path="progress-showcase" element={<ProgressShowcase />} />
         <Route path="counters-showcase" element={<CountersShowcase />} />
         <Route path="containers-showcase" element={<ContainersShowcase />} />
         <Route path="ui-components-showcase" element={<UIComponentsShowcase />} />
         <Route path="searchbar-showcase" element={<SearchbarShowcase />} />
         <Route path="page2" element={<Page2 />} />
-      </Route>
-
+      </Route>      
+      
       {/* Auth routes (only accessible to non-authenticated users) */}
       <Route element={<GuestGuard />}>
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/signup" element={<SignupPage />} />
-        <Route path="/reset-password" element={<ResetPasswordPage />} />
-        <Route path="/set-new-password/:token" element={<SetNewPasswordPage />} />
+        <Route path="/auth/login" element={<LoginPage />} />
+        <Route path="/auth/signup" element={<SignupPage />} />
+        <Route path="/auth/reset-password" element={<ResetPasswordPage />} />
+        <Route path="/auth/set-new-password/:token" element={<SetNewPasswordPage />} />
+        <Route path="/auth/verification-sent" element={<VerificationSentPage />} />
       </Route>
 
       {/* Email verification routes (accessible to both authenticated and non-authenticated users) */}
-      <Route path="/email-verification/:token" element={<EmailVerificationPage />} />
-      <Route path="/verification-sent" element={<VerificationSentPage />} />
+      <Route path="/auth/email-verification/:token" element={<EmailVerificationPage />} />
 
-      {/* Protected routes (only accessible to authenticated users) */}      <Route element={<AuthGuard />}>        <Route path="/app" element={<MainLayout />}>
+      {/* Protected routes (only accessible to authenticated users) */}      
+      <Route element={<AuthGuard />}>        
+      <Route path="/app" element={<MainLayout />}>
           <Route index element={<Dashboard />} />
           <Route path="projects" element={<ProjectsPage />} />
-          <Route path="projects/:projectId" element={<ProjectDetailsPage />} />          <Route path="tasks" element={<TasksPage />} />
+          <Route path="projects/:projectId" element={<ProjectDetailsPage />} />          
+          <Route path="tasks" element={<TasksPage />} />          
           <Route path="tasks/:taskId" element={<TaskPage />} />
           <Route path="profile" element={<ProfilePage />} />
           <Route path="inbox" element={<InboxPage />} />
+          <Route path="analytics" element={<WorkspaceAnalyticsPage />} />
         </Route>
       </Route>
 

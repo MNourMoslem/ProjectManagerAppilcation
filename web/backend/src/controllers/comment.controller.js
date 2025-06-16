@@ -3,6 +3,7 @@ import { User } from '../models/user.model.js';
 import { Task } from '../models/task.model.js';
 
 import { removeCommentFromDB } from '../utils/removeingFromDB.js';
+import { notifyCommentAdded } from './notification.controller.js';
 
 export const createComment = async (req, res) => {
     const { taskId, content, files } = req.body;
@@ -27,9 +28,10 @@ export const createComment = async (req, res) => {
             user: userId,
             content,
             files
-        });
+        });        await comment.save();
 
-        await comment.save();
+        // Send notification to task assignees and project owner
+        await notifyCommentAdded(task, comment, userId);
 
         res.status(201).json({
             success: true,

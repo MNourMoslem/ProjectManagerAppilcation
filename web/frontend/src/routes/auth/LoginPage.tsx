@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import AuthLayout from '../../components/auth/AuthLayout';
 import FormInput from '../../components/auth/FormInput';
 import AuthButton from '../../components/auth/AuthButton';
@@ -46,14 +46,15 @@ const LoginPage = () => {
 
   return (
     <AuthLayout 
-      title="Welcome back" 
-      subtitle="Sign in to your account to continue"
+      title="Welcome back"      subtitle="Sign in to your account to continue"
       footer={
         <div>
           Don't have an account?{' '}
-          <Link to="/auth/signup" className="text-black dark:text-white font-medium hover:underline">
+          <span 
+            onClick={() => navigate('/auth/signup')} 
+            className="text-black dark:text-white font-medium hover:underline cursor-pointer">
             Sign up
-          </Link>
+          </span>
         </div>
       }
     >
@@ -90,12 +91,12 @@ const LoginPage = () => {
               <path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
             </svg>
           }
-        />
-
-        <div className="flex justify-end mb-6">
-          <Link to="/auth/reset-password" className="text-sm text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white">
+        />        <div className="flex justify-end mb-6">
+          <span 
+            onClick={() => navigate('/auth/reset-password')} 
+            className="text-sm text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white cursor-pointer">
             Forgot password?
-          </Link>
+          </span>
         </div>
 
         <AuthButton

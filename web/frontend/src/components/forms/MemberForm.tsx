@@ -68,14 +68,18 @@ export const MemberForm = ({
       setErrors(prev => ({ ...prev, email: '' }));
     }
   };
-  
-  const validate = (): boolean => {
+    const validate = (): boolean => {
     const newErrors: Partial<Record<keyof MemberFormData, string>> = {};
     
     if (!formData.email.trim()) {
       newErrors.email = 'Email address is required';
     } else if (!/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i.test(formData.email)) {
       newErrors.email = 'Invalid email address';
+    } else if (!selectedUser) {
+      // If we have an email but no selected user from search results
+      // This means the user typed an email but didn't select a user from the results
+      // or the email wasn't found in the system
+      console.log('No user selected from search results');
     }
     
     setErrors(newErrors);
@@ -106,13 +110,11 @@ export const MemberForm = ({
         required
         error={errors.email}
         hint="Search for a user by email to add to the project"
-      >
-        <UserSearchBarByEmail
+      >        <UserSearchBarByEmail
           onUserSelect={handleUserSelect}
           placeholder="Search users by email..."
           variant="outlined"
           showRecentSearches={true}
-          searchOnEnterOnly={false}
           className="w-full"
         />
       </FormField>

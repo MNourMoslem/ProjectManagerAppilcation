@@ -3,6 +3,7 @@ import Sidebar from './Sidebar';
 import { useState, useEffect } from 'react';
 import { useAuthStore } from '../../store/authStore';
 import { FloatingDropdown } from '../dropdowns';
+import NotificationBell from '../notifications/NotificationBell';
 import type { DropdownItemProps } from '../dropdowns';
 
 function MainLayout() {
@@ -10,9 +11,7 @@ function MainLayout() {
   const navigate = useNavigate();
   const location = useLocation();
   const [showProfileMenu, setShowProfileMenu] = useState(false);
-  const [pageTitle, setPageTitle] = useState('Dashboard');
-
-  // Update page title based on current route
+  const [pageTitle, setPageTitle] = useState('Dashboard');  // Update page title based on current route
   useEffect(() => {
     const path = location.pathname;
     if (path.includes('/app/projects')) {
@@ -23,6 +22,10 @@ function MainLayout() {
       setPageTitle('Profile');
     } else if (path.includes('/app/inbox')) {
       setPageTitle('Inbox');
+    } else if (path.includes('/app/analytics')) {
+      setPageTitle('Workspace Analytics');
+    } else if (path.includes('/app/team')) {
+      setPageTitle('Team Members');
     } else {
       setPageTitle('Dashboard');
     }
@@ -49,9 +52,10 @@ function MainLayout() {
         <header className="border-b border-gray-200 dark:border-gray-800 sticky top-0 bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm z-10">
           <div className="px-6 py-3 flex items-center justify-between">
             <h1 className="text-xl font-semibold text-gray-800 dark:text-white">{pageTitle}</h1>
-            
-            {/* User profile */}
+              {/* User profile */}
             <div className="flex items-center space-x-4">
+              <NotificationBell />
+              
               <div className="text-sm text-gray-600 dark:text-gray-300">
                 {user?.name}
               </div>

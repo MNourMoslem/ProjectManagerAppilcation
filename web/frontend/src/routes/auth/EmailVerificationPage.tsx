@@ -20,12 +20,11 @@ const EmailVerificationPage = () => {
 
     verifyToken();
   }, [token, verifyEmail]);
-
   useEffect(() => {
     if (verificationAttempted && isAuthenticated && !error) {
       // Redirect to dashboard after successful verification
       const redirectTimer = setTimeout(() => {
-        navigate('/dashboard');
+        navigate('/app');
       }, 3000);
 
       return () => clearTimeout(redirectTimer);

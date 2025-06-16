@@ -5,6 +5,14 @@ import { Issue } from "../models/issue.model.js";
 import { User } from "../models/user.model.js";
 import { removeTaskFromDB } from "../utils/removeingFromDB.js";
 import { isUserAdminOrOwner } from "../utils/userHasAccess.js";
+import { 
+    notifyTaskAssigned, 
+    notifyTaskStatusChanged, 
+    notifyTaskCompleted,
+    notifyCommentAdded,
+    notifyIssueCreated,
+    notifyIssueResolved
+} from "./notification.controller.js";
 
 export const createTask = async (req, res) => {
     const { projectId, title, description, assignedTo, priority, dueDate, tags } = req.body;
@@ -28,13 +36,28 @@ export const createTask = async (req, res) => {
             priority: priority || "no-priority",
             dueDate: dueDate || null,
             tags: tags || [],
-        });
-
-        await task.save();
+        });        await task.save();
 
         // Add task ID to project's tasks array
         project.tasks.push(task._id);
         await project.save();
+
+        // Send notifications to assigned users
+        console.log("Task created successfully, now sending notifications");
+        console.log("assignedTo:", assignedTo);
+        console.log("req.userId:", req.userId);
+        
+        if (assignedTo && assignedTo.length > 0) {
+            console.log(`Sending notifications to ${assignedTo.length} users`);
+            for (const userId of assignedTo) {
+                console.log(`Sending notification to user ${userId}`);
+                try {
+                    await notifyTaskAssigned(task, userId, req.userId);
+                } catch (notifyError) {
+                    console.error(`Error sending notification to user ${userId}:`, notifyError);
+                }
+            }
+        }
 
         res.status(201).json({
             success: true,
@@ -42,6 +65,7 @@ export const createTask = async (req, res) => {
             task,
         });
     } catch (error) {
+        console.error("Error in createTask:", error);
         res.status(400).json({ success: false, message: error.message });
     }
 }
@@ -180,9 +204,7 @@ export const updateTask = async (req, res) => {
         const user = await User.findById(req.userId);
         if (!user) {
             return res.status(404).json({ success: false, message: "User not found" });
-        }
-
-        // Check if the user is owner or admin in the project
+        }        // Check if the user is owner or admin in the project
         const project = await Project.findById(task.project);
         if (!project) {
             return res.status(404).json({ success: false, message: "Project not found" });
@@ -192,16 +214,41 @@ export const updateTask = async (req, res) => {
             return res.status(403).json({ success: false, message: "User does not have permission to update this task" });
         }
 
+        // Store original state to detect changes
+        const originalStatus = task.status;
+        const originalAssignedTo = [...task.assignedTo];
+
         // Update task fields
         task.title = title || task.title;
         task.description = description || task.description;
         task.assignedTo = assignedTo || task.assignedTo;
-        task.status = status || task.status;
-        task.priority = priority || task.priority;
+        task.status = status || task.status;        task.priority = priority || task.priority;
         task.dueDate = dueDate || task.dueDate;
         task.tags = tags || task.tags;
 
         await task.save();
+
+        // Send notifications for changes
+        // 1. Status change notification
+        if (status && originalStatus !== status) {
+            await notifyTaskStatusChanged(task, req.userId);
+            
+            // Special notification for task completion
+            if (status === "done" && originalStatus !== "done") {
+                await notifyTaskCompleted(task, req.userId);
+            }
+        }
+        
+        // 2. New assignment notifications
+        if (assignedTo) {
+            const newAssignees = assignedTo.filter(
+                id => !originalAssignedTo.map(id => id.toString()).includes(id.toString())
+            );
+            
+            for (const userId of newAssignees) {
+                await notifyTaskAssigned(task, userId, req.userId);
+            }
+        }
 
         res.status(200).json({
             success: true,

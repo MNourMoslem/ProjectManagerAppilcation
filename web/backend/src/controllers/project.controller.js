@@ -5,6 +5,7 @@ import { Task } from "../models/task.model.js";
 
 import { addMemberToProject as relevantAddMemberFromProject, removeMemberFromProject as relevantRemoveMemberFromProject} from "../utils/projectUtils.js";
 import { isUserPartOfProject } from "../utils/userHasAccess.js";
+import { notifyProjectInvite, notifyProjectRemoved, notifyProjectUpdate } from "../controllers/notification.controller.js";
 
 export const createProject = async (req, res) => {
     const { name, shortDescription, description, targetDate } = req.body;
@@ -27,8 +28,12 @@ export const createProject = async (req, res) => {
             targetDate: targetDate || null,
         });
 
-        // Add the owner as the first member of the project
-        relevantAddMemberFromProject(project, user, "owner");
+        try{
+            relevantAddMemberFromProject(project, user, "owner");
+        }
+        catch (error) {
+            return res.status(400).json({ success: false, message: error.message });
+        }
 
         res.status(201).json({
             success: true,
@@ -114,6 +119,7 @@ export const updateProject = async (req, res) => {
         project.targetDate = targetDate || project.targetDate;
         project.status = status || project.status;
         await project.save();
+
         res.status(200).json({
             success: true,
             message: "Project updated successfully",
@@ -139,12 +145,15 @@ export const removeMemberFromProject = async (req, res) => {
             return res.status(404).json({ success: false, message: "User not found" });
         }
 
-        relevantRemoveMemberFromProject(project, member);
+        try{
+            relevantRemoveMemberFromProject(project, member);
+        }
+        catch (error) {
+            return res.status(400).json({ success: false, message: error.message });
+        }
 
         // delete project ID from user's projects array
-        member.projects = member.projects.filter(p => p.toString() !== projectId);
-
-        // sent a notification email to the member
+        member.projects = member.projects.filter(p => p.toString() !== projectId);        // sent a notification email to the member
         const mail = new Mail({
             sender: req.userId,
             recipient: memberId,
@@ -153,6 +162,11 @@ export const removeMemberFromProject = async (req, res) => {
             type: "notification",
             projectId: project._id,
         });
+
+        await mail.save();
+        
+        // Send in-app notification about being removed from project
+        await notifyProjectRemoved(memberId, project.name, req.userId);
 
         res.status(200).json({
             success: true,
@@ -290,9 +304,10 @@ export const inviteMemberToProject = async (req, res) => {
             body: `You have been invited to join the project "${project.name}" as a ${role}. Please accept the invitation to become a member.`,
             type: "invite",
             projectId: project._id,
-        });
+        });        await mail.save();
 
-        await mail.save();
+        // Create notification for project invitation
+        await notifyProjectInvite(project, userId, req.userId);
 
         res.status(200).json({
             success: true,

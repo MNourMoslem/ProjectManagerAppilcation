@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import AuthLayout from '../../components/auth/AuthLayout';
 import AuthButton from '../../components/auth/AuthButton';
 import { useAuthStore } from '../../store/authStore';
@@ -6,6 +6,7 @@ import { useAuthStore } from '../../store/authStore';
 const VerificationSentPage = () => {
   const { user } = useAuthStore();
   const email = user?.email || 'your email';
+  const navigate = useNavigate();
 
   const handleResendVerification = async () => {
     // In a real implementation, call an API to resend verification email
@@ -34,14 +35,13 @@ const VerificationSentPage = () => {
             variant="secondary"
             fullWidth
           />
-          
-          <div className="text-center">
-            <Link
-              to="/login"
-              className="text-sm font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"
+            <div className="text-center">
+            <span
+              onClick={() => navigate('/auth/login')}
+              className="text-sm font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300 cursor-pointer"
             >
               Return to Login
-            </Link>
+            </span>
           </div>
         </div>
       </div>

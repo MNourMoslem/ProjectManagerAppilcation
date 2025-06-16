@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import AuthLayout from '../../components/auth/AuthLayout';
 import FormInput from '../../components/auth/FormInput';
 import AuthButton from '../../components/auth/AuthButton';
@@ -61,7 +61,6 @@ const SignupPage = () => {
     setErrors(newErrors);
     return isValid;
   };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     clearError();
@@ -73,15 +72,16 @@ const SignupPage = () => {
   };
 
   return (
-    <AuthLayout
-      title="Create an account"
+    <AuthLayout      title="Create an account"
       subtitle="Join TeamWork to start collaborating"
       footer={
         <div>
           Already have an account?{' '}
-          <Link to="/auth/login" className="text-black dark:text-white font-medium hover:underline">
+          <span 
+            onClick={() => navigate('/auth/login')} 
+            className="text-black dark:text-white font-medium hover:underline cursor-pointer">
             Sign in
-          </Link>
+          </span>
         </div>
       }
     >

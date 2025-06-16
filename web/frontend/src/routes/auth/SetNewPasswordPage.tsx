@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import AuthLayout from '../../components/auth/AuthLayout';
 import FormInput from '../../components/auth/FormInput';
 import AuthButton from '../../components/auth/AuthButton';
@@ -13,11 +13,7 @@ const SetNewPasswordPage = () => {
 
   const { setNewPassword, isLoading, error, clearError } = useAuthStore();
   const navigate = useNavigate();
-  const location = useLocation();
-
-  // Get token from URL query parameters
-  const queryParams = new URLSearchParams(location.search);
-  const token = queryParams.get('token');
+  const { token } = useParams<{ token: string }>();
 
   const validateForm = () => {
     const newErrors: { password?: string; confirmPassword?: string } = {};
@@ -70,12 +66,13 @@ const SetNewPasswordPage = () => {
         subtitle="Your password has been updated"
         footer={
           <div className="mt-4">
-            <p>Redirecting to login page...</p>
-            <p className="mt-2">
+            <p>Redirecting to login page...</p>            <p className="mt-2">
               If you're not redirected,{' '}
-              <Link to="/auth/login" className="text-black dark:text-white font-medium hover:underline">
+              <span 
+                onClick={() => navigate('/auth/login')} 
+                className="text-black dark:text-white font-medium hover:underline cursor-pointer">
                 click here to sign in
-              </Link>
+              </span>
             </p>
           </div>
         }
@@ -96,13 +93,14 @@ const SetNewPasswordPage = () => {
   return (
     <AuthLayout
       title="Create new password"
-      subtitle="Enter your new password below"
-      footer={
+      subtitle="Enter your new password below"      footer={
         <div>
           Remember your password?{' '}
-          <Link to="/auth/login" className="text-black dark:text-white font-medium hover:underline">
+          <span 
+            onClick={() => navigate('/auth/login')} 
+            className="text-black dark:text-white font-medium hover:underline cursor-pointer">
             Sign in
-          </Link>
+          </span>
         </div>
       }
     >

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import AuthLayout from '../../components/auth/AuthLayout';
 import FormInput from '../../components/auth/FormInput';
 import AuthButton from '../../components/auth/AuthButton';
@@ -9,6 +9,7 @@ const ResetPasswordPage = () => {
   const [email, setEmail] = useState('');
   const [emailSent, setEmailSent] = useState(false);
   const [errors, setErrors] = useState<{ email?: string }>({});
+  const navigate = useNavigate();
 
   const { resetPassword, isLoading, error, clearError } = useAuthStore();
 
@@ -37,7 +38,6 @@ const ResetPasswordPage = () => {
       setEmailSent(true);
     }
   };
-
   if (emailSent) {
     return (
       <AuthLayout
@@ -45,9 +45,11 @@ const ResetPasswordPage = () => {
         subtitle={`We've sent a password reset link to ${email}`}
         footer={
           <div className="mt-4">
-            <Link to="/auth/login" className="text-black dark:text-white font-medium hover:underline">
+            <span 
+              onClick={() => navigate('/auth/login')} 
+              className="text-black dark:text-white font-medium hover:underline cursor-pointer">
               Return to sign in
-            </Link>
+            </span>
           </div>
         }
       >
@@ -68,15 +70,16 @@ const ResetPasswordPage = () => {
   }
 
   return (
-    <AuthLayout
-      title="Reset your password"
+    <AuthLayout      title="Reset your password"
       subtitle="Enter your email and we'll send you a reset link"
       footer={
         <div>
           Remember your password?{' '}
-          <Link to="/auth/login" className="text-black dark:text-white font-medium hover:underline">
+          <span 
+            onClick={() => navigate('/auth/login')} 
+            className="text-black dark:text-white font-medium hover:underline cursor-pointer">
             Sign in
-          </Link>
+          </span>
         </div>
       }
     >

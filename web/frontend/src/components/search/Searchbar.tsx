@@ -269,6 +269,7 @@ const Searchbar: React.FC<SearchbarProps> = ({
         if (onEnter) onEnter(internalValue);
       }
     } else if (e.key === 'Enter') {
+      e.preventDefault();
       handleSearchSubmit();
       // If searchOnEnterOnly, trigger search here
       if (searchOnEnterOnly && onSearch) {

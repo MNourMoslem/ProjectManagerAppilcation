@@ -5,6 +5,7 @@ import cookieParser from "cookie-parser";
 import path from "path";
 
 import { connectDB } from "./src/db/connectdb.js";
+import { setupNotificationJobs } from "./src/jobs/notificationJobs.js";
 
 import authRoutes from "./src/routes/auth.route.js";
 import projectRoutes from "./src/routes/project.route.js";
@@ -12,6 +13,7 @@ import taskRoutes from "./src/routes/task.route.js";
 import issueRoutes from "./src/routes/issue.route.js";
 import commentRouted from "./src/routes/comment.route.js";
 import mailRoutes from "./src/routes/mail.route.js";
+import notificationRoutes from "./src/routes/notification.route.js";
 
 import { verifyToken } from "./src/middleware/verifyToken.js";
 
@@ -37,8 +39,10 @@ app.use("/api/tasks", verifyToken, taskRoutes);
 app.use("/api/issues", verifyToken, issueRoutes);
 app.use("/api/comments", verifyToken, commentRouted);
 app.use("/api/mails", verifyToken, mailRoutes);
+app.use("/api/notifications", verifyToken, notificationRoutes);
 
 app.listen(PORT, () => {
 	connectDB();
+	setupNotificationJobs();
 	console.log("Server is running on port: ", PORT);
 });

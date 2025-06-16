@@ -23,6 +23,7 @@ export interface DropdownProps {
   size?: 'xs' | 'sm' | 'md' | 'lg';
   width?: string;
   className?: string;
+  defaultOpen?: boolean;
 }
 
 // Common dropdown menu styles

@@ -1,12 +1,11 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 
-const GuestGuard = () => {
-  const { isAuthenticated } = useAuthStore();
+const GuestGuard = () => {  const { isAuthenticated } = useAuthStore();
   const location = useLocation();
   
-  // Get the redirect path from location state or default to dashboard
-  const from = (location.state as { from?: { pathname: string } })?.from?.pathname || '/dashboard';
+  // Get the redirect path from location state or default to app dashboard
+  const from = (location.state as { from?: { pathname: string } })?.from?.pathname || '/app';
 
   if (isAuthenticated) {
     // If authenticated, redirect to the intended page or dashboard
