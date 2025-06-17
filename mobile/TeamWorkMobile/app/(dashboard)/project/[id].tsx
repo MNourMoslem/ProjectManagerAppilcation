@@ -7,6 +7,7 @@ import { PrimaryButton, SecondaryButton } from '../../../components/buttons';
 import { useProjectStore, Project } from '../../../store/projectStore';
 import { ProjectForm, ProjectFormData } from '../../../components/forms';
 import MembersTab from '../../../components/project/MembersTab';
+import TasksTab from '../../../components/project/TasksTab';
 
 export default function ProjectDetailScreen() {
   const { id } = useLocalSearchParams();
@@ -26,7 +27,7 @@ export default function ProjectDetailScreen() {
   } = useProjectStore();
 
   // Local state
-  const [activeTab, setActiveTab] = useState<'overview' | 'members'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'members' | 'tasks'>('overview');
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [isLeaveConfirmOpen, setIsLeaveConfirmOpen] = useState(false);
@@ -261,18 +262,26 @@ export default function ProjectDetailScreen() {
       {/* Tabs */}
       <View className="flex-row border-b border-gray-200 dark:border-gray-700">
         <TouchableOpacity
-          className={`flex-1 py-3 px-4 ${activeTab === 'overview' ? 'border-b-2 border-black dark:border-white' : ''}`}
+          className={`flex-1 py-3 px-2 ${activeTab === 'overview' ? 'border-b-2 border-black dark:border-white' : ''}`}
           onPress={() => setActiveTab('overview')}
         >
-          <Text className={`text-center font-medium ${activeTab === 'overview' ? 'text-black dark:text-white' : 'text-gray-500 dark:text-gray-400'}`}>
+          <Text className={`text-center font-medium text-xs ${activeTab === 'overview' ? 'text-black dark:text-white' : 'text-gray-500 dark:text-gray-400'}`}>
             Overview
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
-          className={`flex-1 py-3 px-4 ${activeTab === 'members' ? 'border-b-2 border-black dark:border-white' : ''}`}
+          className={`flex-1 py-3 px-2 ${activeTab === 'tasks' ? 'border-b-2 border-black dark:border-white' : ''}`}
+          onPress={() => setActiveTab('tasks')}
+        >
+          <Text className={`text-center font-medium text-xs ${activeTab === 'tasks' ? 'text-black dark:text-white' : 'text-gray-500 dark:text-gray-400'}`}>
+            Tasks
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          className={`flex-1 py-3 px-2 ${activeTab === 'members' ? 'border-b-2 border-black dark:border-white' : ''}`}
           onPress={() => setActiveTab('members')}
         >
-          <Text className={`text-center font-medium ${activeTab === 'members' ? 'text-black dark:text-white' : 'text-gray-500 dark:text-gray-400'}`}>
+          <Text className={`text-center font-medium text-xs ${activeTab === 'members' ? 'text-black dark:text-white' : 'text-gray-500 dark:text-gray-400'}`}>
             Members
           </Text>
         </TouchableOpacity>
@@ -296,6 +305,7 @@ export default function ProjectDetailScreen() {
       ) : (
         <>
           {activeTab === 'overview' && renderOverviewTab()}
+          {activeTab === 'tasks' && <TasksTab projectId={currentProject._id} />}
           {activeTab === 'members' && <MembersTab projectId={currentProject._id} />}
         </>
       )}

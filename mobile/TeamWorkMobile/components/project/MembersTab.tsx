@@ -8,6 +8,7 @@ import {
   Alert,
   Modal,
   ActivityIndicator,
+  useColorScheme,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useProjectStore, ProjectMember } from '../../store/projectStore';
@@ -19,6 +20,9 @@ interface MembersTabProps {
 }
 
 const MembersTab: React.FC<MembersTabProps> = ({ projectId }) => {
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
+  
   const {
     members,
     membersLoading,
@@ -83,44 +87,50 @@ const MembersTab: React.FC<MembersTabProps> = ({ projectId }) => {
 
   if (membersLoading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#000000" />
-        <Text style={styles.loadingText}>Loading members...</Text>
+      <View style={[styles.loadingContainer, { backgroundColor: isDark ? '#1f2937' : '#f9fafb' }]}>
+        <ActivityIndicator size="large" color={isDark ? '#ffffff' : '#000000'} />
+        <Text style={[styles.loadingText, { color: isDark ? '#9ca3af' : '#6b7280' }]}>Loading members...</Text>
       </View>
     );
   }
 
   if (membersError) {
     return (
-      <View style={styles.errorContainer}>
+      <View style={[styles.errorContainer, { backgroundColor: isDark ? '#1f2937' : '#f9fafb' }]}>
         <Ionicons name="alert-circle" size={48} color="#ef4444" />
-        <Text style={styles.errorText}>Failed to load members</Text>
+        <Text style={[styles.errorText, { color: isDark ? '#fca5a5' : '#ef4444' }]}>Failed to load members</Text>
         <TouchableOpacity
-          style={styles.retryButton}
+          style={[styles.retryButton, { backgroundColor: isDark ? '#ffffff' : '#000000' }]}
           onPress={() => fetchProjectMembers(projectId)}
         >
-          <Text style={styles.retryButtonText}>Retry</Text>
+          <Text style={[styles.retryButtonText, { color: isDark ? '#000000' : '#ffffff' }]}>Retry</Text>
         </TouchableOpacity>
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: isDark ? '#1f2937' : '#f9fafb' }]}>
       {/* Header with Add Member button */}
-      <View style={styles.header}>
-        <Text style={styles.title}>Project Members</Text>
+      <View style={[styles.header, { 
+        backgroundColor: isDark ? '#374151' : '#ffffff',
+        borderBottomColor: isDark ? '#4b5563' : '#e5e7eb'
+      }]}>
+        <Text style={[styles.title, { color: isDark ? '#f9fafb' : '#111827' }]}>Project Members</Text>
         <TouchableOpacity
-          style={styles.addButton}
+          style={[styles.addButton, { backgroundColor: isDark ? '#ffffff' : '#000000' }]}
           onPress={() => setIsAddModalVisible(true)}
         >
-          <Ionicons name="add" size={20} color="#ffffff" />
-          <Text style={styles.addButtonText}>Add Member</Text>
+          <Ionicons name="add" size={20} color={isDark ? '#000000' : '#ffffff'} />
+          <Text style={[styles.addButtonText, { color: isDark ? '#000000' : '#ffffff' }]}>Add Member</Text>
         </TouchableOpacity>
       </View>
 
       {/* Members count */}
-      <Text style={styles.membersCount}>
+      <Text style={[styles.membersCount, { 
+        color: isDark ? '#9ca3af' : '#6b7280',
+        backgroundColor: isDark ? '#374151' : '#ffffff'
+      }]}>
         {members.length} member{members.length !== 1 ? 's' : ''}
       </Text>
 
@@ -134,17 +144,17 @@ const MembersTab: React.FC<MembersTabProps> = ({ projectId }) => {
           showsVerticalScrollIndicator={false}
         />
       ) : (
-        <View style={styles.emptyContainer}>
-          <Ionicons name="people-outline" size={64} color="#9ca3af" />
-          <Text style={styles.emptyTitle}>No members yet</Text>
-          <Text style={styles.emptyText}>
+        <View style={[styles.emptyContainer, { backgroundColor: isDark ? '#1f2937' : '#f9fafb' }]}>
+          <Ionicons name="people-outline" size={64} color={isDark ? '#6b7280' : '#9ca3af'} />
+          <Text style={[styles.emptyTitle, { color: isDark ? '#d1d5db' : '#374151' }]}>No members yet</Text>
+          <Text style={[styles.emptyText, { color: isDark ? '#9ca3af' : '#6b7280' }]}>
             Start by adding members to your project
           </Text>
           <TouchableOpacity
-            style={styles.emptyAddButton}
+            style={[styles.emptyAddButton, { backgroundColor: isDark ? '#ffffff' : '#000000' }]}
             onPress={() => setIsAddModalVisible(true)}
           >
-            <Text style={styles.emptyAddButtonText}>Add First Member</Text>
+            <Text style={[styles.emptyAddButtonText, { color: isDark ? '#000000' : '#ffffff' }]}>Add First Member</Text>
           </TouchableOpacity>
         </View>
       )}
@@ -155,14 +165,16 @@ const MembersTab: React.FC<MembersTabProps> = ({ projectId }) => {
         animationType="slide"
         presentationStyle="pageSheet"
       >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>Add Member</Text>
+        <View style={[styles.modalContainer, { backgroundColor: isDark ? '#1f2937' : '#ffffff' }]}>
+          <View style={[styles.modalHeader, { 
+            borderBottomColor: isDark ? '#4b5563' : '#e5e7eb'
+          }]}>
+            <Text style={[styles.modalTitle, { color: isDark ? '#f9fafb' : '#111827' }]}>Add Member</Text>
             <TouchableOpacity
               style={styles.closeButton}
               onPress={() => setIsAddModalVisible(false)}
             >
-              <Ionicons name="close" size={24} color="#6b7280" />
+              <Ionicons name="close" size={24} color={isDark ? '#9ca3af' : '#6b7280'} />
             </TouchableOpacity>
           </View>
           
@@ -180,7 +192,6 @@ const MembersTab: React.FC<MembersTabProps> = ({ projectId }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f9fafb',
   },
   loadingContainer: {
     flex: 1,
@@ -190,7 +201,6 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 12,
     fontSize: 16,
-    color: '#6b7280',
   },
   errorContainer: {
     flex: 1,
@@ -201,18 +211,15 @@ const styles = StyleSheet.create({
   errorText: {
     marginTop: 12,
     fontSize: 16,
-    color: '#ef4444',
     textAlign: 'center',
   },
   retryButton: {
     marginTop: 16,
     paddingHorizontal: 24,
     paddingVertical: 12,
-    backgroundColor: '#000000',
     borderRadius: 8,
   },
   retryButtonText: {
-    color: '#ffffff',
     fontSize: 14,
     fontWeight: '500',
   },
@@ -221,25 +228,20 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: 16,
-    backgroundColor: '#ffffff',
     borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
   },
   title: {
     fontSize: 20,
     fontWeight: '600',
-    color: '#111827',
   },
   addButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#000000',
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 8,
   },
   addButtonText: {
-    color: '#ffffff',
     fontSize: 14,
     fontWeight: '500',
     marginLeft: 4,
@@ -247,8 +249,6 @@ const styles = StyleSheet.create({
   membersCount: {
     padding: 16,
     fontSize: 14,
-    color: '#6b7280',
-    backgroundColor: '#ffffff',
   },
   membersList: {
     flex: 1,
@@ -263,30 +263,25 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#374151',
     marginTop: 16,
     marginBottom: 8,
   },
   emptyText: {
     fontSize: 14,
-    color: '#6b7280',
     textAlign: 'center',
     marginBottom: 24,
   },
   emptyAddButton: {
-    backgroundColor: '#000000',
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 8,
   },
   emptyAddButtonText: {
-    color: '#ffffff',
     fontSize: 14,
     fontWeight: '500',
   },
   modalContainer: {
     flex: 1,
-    backgroundColor: '#ffffff',
   },
   modalHeader: {
     flexDirection: 'row',
@@ -294,12 +289,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
   },
   modalTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#111827',
   },
   closeButton: {
     padding: 4,
