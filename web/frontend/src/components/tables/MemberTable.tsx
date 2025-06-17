@@ -7,26 +7,25 @@ import { MemberCard } from '../members';
 import { ProjectMember as Member } from '../../interfaces/interfaces';
 
 function MemberTable({projectId}: {projectId: string}) {
-    const navigate = useNavigate();
-
     const memberColumns: Column<Member>[] = [
         {
             id: 'name',
             header: 'Member',
             accessor: (member) => (
                 <MemberCard
-                    id={member._id}
-                    name={member.name}
-                    email={member.email}
-                    role={member.role}
+                    id={member?._id || ''}
+                    name={member?.name || ''}
+                    email={member?.email || ''}
+                    role={member?.role || ''}
                 />
             ),
             sortable: true,
-            sortFn: (a, b) => a.name.localeCompare(b.name),
+            sortFn: (a, b) => a?.name?.localeCompare(b?.name),
         },
         {
             id: 'role',
-            header: 'Role',      accessor: (member) => {
+            header: 'Role',      
+            accessor: (member) => {
                 const roleStyles = {
                 'owner': 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400',
                 'admin': 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
@@ -52,13 +51,12 @@ function MemberTable({projectId}: {projectId: string}) {
 
     useEffect(() => {
         fetchProjectMembers(projectId);
-    }
-    , [fetchProjectMembers]);
+    }, [fetchProjectMembers]);
 
     return (
         <TableWithPagination
             columns={memberColumns}
-            data={members}
+            data={members || []}
             itemsPerPage={10}
         />
     )
