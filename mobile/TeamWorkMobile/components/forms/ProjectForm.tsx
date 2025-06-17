@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
 import { useColorScheme } from 'nativewind';
 import { Ionicons } from '@expo/vector-icons';
 import { FormField, Input } from './index';
@@ -231,6 +231,31 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
             />
           )}
         </View>
+      </View>
+
+      {/* Form Actions */}
+      <View className="flex-row justify-end">
+        <TouchableOpacity
+          onPress={onCancel}
+          className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg mr-3"
+          activeOpacity={0.7}
+        >
+          <Text className="text-gray-700 dark:text-gray-300 font-medium">Cancel</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={handleSubmit}
+          className="bg-blue-500 px-4 py-2 rounded-lg"
+          activeOpacity={0.7}
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? (
+            <ActivityIndicator size="small" color="#ffffff" />
+          ) : (
+            <Text className="text-white font-medium">
+              {mode === 'create' ? 'Create Project' : 'Update Project'}
+            </Text>
+          )}
+        </TouchableOpacity>
       </View>
     </View>
   );

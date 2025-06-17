@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useProjectStore } from '../store/projectStore';
 import { useAuthStore } from '../store/authStore';
 import { Card, StatCard } from '../components/cards';
@@ -12,23 +12,38 @@ const WorkspaceAnalyticsPage = () => {
   const [timeframe, setTimeframe] = useState<'week' | 'month' | 'year'>('week');
   const [isLoading, setIsLoading] = useState(true);
 
-  // Fetch data on component mount
+  const user = useAuthStore(state => state.user);  // Fetch data on component mount
   useEffect(() => {
-    setIsLoading(true);
-    Promise.all([
-      fetchAllUserTasks(),
-      fetchProjectsWithDetails()
-    ]).finally(() => {
-      setIsLoading(false);
-    });
+    const loadData = async () => {
+      setIsLoading(true);
+      console.log("⏳ Starting to fetch analytics data...");
+      try {
+        await Promise.all([
+          fetchAllUserTasks(),
+          fetchProjectsWithDetails()
+        ]);
+        console.log("✅ Successfully fetched analytics data");
+      } catch (error) {
+        console.error("❌ Error loading analytics data:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };    
+    loadData();
   }, [fetchAllUserTasks, fetchProjectsWithDetails]);
-
   // Calculate activity metrics from existing data
-  const calculateActivityMetrics = () => {
-    if (!tasks || tasks.length === 0) return null;
+  const metrics = useMemo(() => {
+    console.log("🔄 Running metrics calculation, isLoading:", isLoading, "tasks length:", tasks?.length || 0);
+    
+    if (isLoading || !tasks || tasks.length === 0) {
+      console.log("⚠️ Cannot calculate metrics - data not ready");
+      return null;
+    }
+
+    console.log("📊 Calculating metrics with", tasks.length, "tasks");
 
     // Calculate task completion rate
-    const completedTasks = tasks.filter(task => task.status === 'done').length;
+    const completedTasks = tasks.filter(task => task.status === 'done' && task.submitionMessage?.member._id === user?._id).length;
     const completionRate = tasks.length > 0 ? Math.round((completedTasks / tasks.length) * 100) : 0;
 
     // Calculate tasks by priority
@@ -53,7 +68,7 @@ const WorkspaceAnalyticsPage = () => {
       return { 
         project, 
         taskCount: projectTasks.length,
-        completedCount: projectTasks.filter(task => task.status === 'done').length
+        completedCount: projectTasks.filter(task => task.status === 'done' && task.submitionMessage?.member._id === user?._id).length
       };
     });
 
@@ -65,12 +80,12 @@ const WorkspaceAnalyticsPage = () => {
       tasksByStatus,
       mostActiveProject
     };
-  };
-
-  const metrics = calculateActivityMetrics();
+  }, [isLoading, tasks, projects, user?._id]);
 
   // Create weekly activity chart data
-  const getWeeklyActivityData = () => {
+  const weeklyData = useMemo(() => {
+    if (isLoading || !tasks) return [];
+
     const today = new Date();
     const startDay = startOfWeek(today, { weekStartsOn: 1 });
     const endDay = endOfWeek(today, { weekStartsOn: 1 });
@@ -94,13 +109,11 @@ const WorkspaceAnalyticsPage = () => {
       
       return { day: dayStr, date: dateStr, tasksCreated, tasksCompleted };
     });
-  };
-
-  const weeklyData = getWeeklyActivityData();
+  }, [isLoading, tasks]);
 
   // Get upcoming deadlines
-  const getUpcomingDeadlines = () => {
-    if (!tasks) return [];
+  const upcomingDeadlines = useMemo(() => {
+    if (isLoading || !tasks) return [];
     
     const upcoming = tasks
       .filter(task => task.status !== 'done' && task.dueDate)
@@ -118,13 +131,11 @@ const WorkspaceAnalyticsPage = () => {
         projectName: project?.name || 'Unknown Project'
       };
     });
-  };
-  
-  const upcomingDeadlines = getUpcomingDeadlines();
+  }, [isLoading, tasks, projects]);
 
   // Get recent activity
-  const getRecentActivity = () => {
-    if (!tasks) return [];
+  const recentActivity = useMemo(() => {
+    if (isLoading || !tasks) return [];
     
     // Sort tasks by most recently updated
     return tasks
@@ -138,13 +149,11 @@ const WorkspaceAnalyticsPage = () => {
           timeAgo: formatDistance(new Date(task.updatedAt), new Date(), { addSuffix: true })
         };
       });
-  };
-  
-  const recentActivity = getRecentActivity();
+  }, [isLoading, tasks, projects]);
 
   // Get team productivity
-  const getTeamProductivity = () => {
-    if (!tasks || !projects) return [];
+  const teamProductivity = useMemo(() => {
+    if (isLoading || !tasks || !projects) return [];
     
     // Get unique team members from all projects
     const teamMembers = new Set();
@@ -189,19 +198,15 @@ const WorkspaceAnalyticsPage = () => {
     
     // Sort by completion rate descending
     return productivity.sort((a, b) => b.completionRate - a.completionRate);
-  };
-  
-  const teamProductivity = getTeamProductivity();
+  }, [isLoading, tasks, projects]);
 
   // Function to get max value for chart scaling
-  const getMaxChartValue = () => {
+  const maxChartValue = useMemo(() => {
     if (!weeklyData) return 10;
     const maxCreated = Math.max(...weeklyData.map(d => d.tasksCreated));
     const maxCompleted = Math.max(...weeklyData.map(d => d.tasksCompleted));
     return Math.max(maxCreated, maxCompleted, 5); // Minimum of 5 for scaling
-  };
-  
-  const maxChartValue = getMaxChartValue();
+  }, [weeklyData]);
 
   return (
     <div className="p-6">
@@ -233,10 +238,11 @@ const WorkspaceAnalyticsPage = () => {
           />
         </div>
       </div>
-
-      {isLoading ? (
-        <div className="flex justify-center items-center py-20">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
+      { isLoading && tasks && tasks.length > 0? (
+        <div className="flex flex-col justify-center items-center py-20">
+          <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-indigo-500 mb-4"></div>
+          <p className="text-gray-600 dark:text-gray-300 text-lg font-medium">Loading analytics data...</p>
+          <p className="text-gray-500 dark:text-gray-400 text-sm mt-2">Please wait while we fetch your workspace information</p>
         </div>
       ) : (
         <>

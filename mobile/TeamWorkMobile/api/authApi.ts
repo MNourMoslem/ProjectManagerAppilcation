@@ -129,3 +129,23 @@ export const resendVerification = async (): Promise<AuthResponse> => {
     throw error;
   }
 };
+
+// Update user profile
+export const updateUser = async (userData: { name?: string; darkMode?: boolean }): Promise<AuthResponse> => {
+  try {
+    const response = await apiRequest('/auth/profile', 'PUT', userData);
+    return response;
+  } catch (error) {
+    throw error;
+  }
+};
+
+// Change password
+export const changePassword = async (currentPassword: string, newPassword: string): Promise<AuthResponse> => {
+  try {
+    const response = await apiRequest('/auth/change-password', 'PUT', { currentPassword, newPassword });
+    return response;
+  } catch (error) {
+    throw error;
+  }
+};

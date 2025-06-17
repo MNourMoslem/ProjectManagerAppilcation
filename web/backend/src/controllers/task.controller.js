@@ -118,6 +118,7 @@ export const getAllTasksOfUser = async (req, res) => {
     }
 }
 
+
 export const getTasksOfUser = async (req, res) => {
     try {
         const userId = req.userId; // Get user ID from the auth middleware
@@ -174,7 +175,7 @@ export const getTasksOfUser = async (req, res) => {
         const tasks = await Task.find(query)
             .skip(parseInt(from))
             .limit(parseInt(to))
-            .createdAt(-1) // Sort by created date descending
+            .sort({createdAt : -1})
             .populate("project", "name description")
             .populate("assignedTo", "name email");
         

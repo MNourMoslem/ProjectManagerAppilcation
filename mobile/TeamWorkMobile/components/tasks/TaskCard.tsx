@@ -7,26 +7,7 @@ import {
   useColorScheme,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-
-interface User {
-  _id: string;
-  name: string;
-  email: string;
-  avatar?: string;
-}
-
-export interface Task {
-  _id: string;
-  title: string;
-  description: string;
-  status: 'todo' | 'in-progress' | 'review' | 'done';
-  priority: 'no-priority' | 'low' | 'medium' | 'high' | 'urgent';
-  dueDate: Date | null;
-  assignedTo: User[];
-  tags: string[];
-  createdAt: Date;
-  updatedAt: Date;
-}
+import {User, Task} from "@/interfaces/interfaces"
 
 interface TaskCardProps {
   task: Task;
@@ -127,7 +108,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
     }
   };
 
-  const dateInfo = formatDate(task.dueDate);
+  const dateInfo = formatDate(task.dueDate || null);
 
   return (
     <TouchableOpacity
@@ -272,10 +253,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
             Assigned to:
           </Text>
           <View style={styles.membersList}>
-            {task.assignedTo[0].map((member: User, index: number) => {
-              console.log("member:", member);
-              console.log("Assigned to:", task.assignedTo);
-              console.log("task: ", task);
+            {task.assignedTo.map((member: User, index: number) => {
               return (
                 <View
                   key={index}

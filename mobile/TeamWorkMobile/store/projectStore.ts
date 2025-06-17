@@ -1,92 +1,14 @@
 import { create } from 'zustand';
 import { projectAPI, taskAPI } from '../api/projectApi';
+import { User, Project, ProjectDetails, Task, ProjectMember, Issue, Comment } from '@/interfaces/interfaces';
 
-// Interfaces matching the web frontend
-export interface User {
-  _id: string;
-  email: string;
-  name: string;
-  lastLogin: Date;
-  isVerified: boolean;
-  darkMode: boolean;
-  projects: string[];
-  numUnreadMails?: number;
-}
-
-export interface ProjectMember {
-  _id: string;
-  name: string;
-  email: string;
-  role: 'owner' | 'admin' | 'member';
-  joinedAt: string;
-}
-
-export interface Project {
-  _id: string;
-  owner: User;
-  name: string;
-  shortDescription?: string;
-  description?: string;
-  members: ProjectMember[];
-  memberRoles: [{
-    user: User;
-    role: 'owner' | 'admin' | 'member';
-  }];
-  status: "active" | "archived" | "completed";
-  targetDate?: Date;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface ProjectDetails {
-  totalTasks: number;
-  completedTasks: number;
-  pendingTasks: number;
-  overdueTasks: number;
-  totalMembers: number;
-  progress: number;
-}
-
-export interface ProjectWithDetails extends Project {
-  details: ProjectDetails;
-}
-
-export interface Task {
-  _id: string;
-  title: string;
-  description: string;
-  status: 'todo' | 'in-progress' | 'done' | 'cancelled';
-  priority: 'no-priority' | 'low' | 'medium' | 'high' | 'urgent';
-  assignedTo?: User;
-  project: Project;
-  dueDate?: Date;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface Comment {
-  _id: string;
-  content: string;
-  createdBy: User;
-  createdAt: string;
-}
-
-export interface Issue {
-  _id: string;
-  title: string;
-  description: string;
-  status: 'open' | 'in-progress' | 'resolved' | 'closed';
-  createdBy: User;
-  createdAt: string;
-  updatedAt: string;
-}
 
 interface ProjectState {
   // Projects
   projects: Project[];
-  projectsWithDetails: ProjectWithDetails[];
+  projectsWithDetails: ProjectDetails[];
   currentProject: Project | null;
-  currentProjectWithDetails: ProjectWithDetails | null;
+  currentProjectWithDetails: ProjectDetails | null;
   projectsLoading: boolean;
   projectsError: string | null;
   

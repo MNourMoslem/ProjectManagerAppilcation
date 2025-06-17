@@ -3,8 +3,8 @@ export interface User
     _id: string;
     name: string;
     email: string;
-    createdAt: string;
-    updatedAt: string;
+    createdAt?: string;
+    updatedAt?: string;
     profilePicture?: string; // URL to the user's profile picture
 }
 
@@ -31,15 +31,12 @@ export interface Project
     updatedAt: string;
 }
 
-export interface ProjectDetails {
-  taskCounts : {
-    "done" : number,
-    "todo" : number,
-    'in-progress' : number,
-    "cancelled" : number
-  }
+export interface ProjectDetails
+{
+    taskCounts: {
+        [status in 'todo' | 'in-progress' | 'done']?: number;
+    };
 }
-
 
 export interface ProjectWithDetails extends Project {
     details: ProjectDetails;
@@ -83,7 +80,7 @@ export interface Task
     project: string; // ID of the project this task belongs to
     title: string;
     description?: string;
-    status: 'todo' | 'in-progress' | 'done' | 'cancelled'; // Task status
+    status: 'todo' | 'in-progress' | 'done'; // Task status
     priority: "low" | "medium" | "high" | "no-priority" | "urgent"; // Task priority
     dueDate?: Date; // ISO date string
     assignedTo: User[]; // Array of user IDs assigned to this task
@@ -107,7 +104,7 @@ export interface Mail {
   };  subject: string;
   body: string;
   status: 'pending' | 'sent' | 'failed' | 'accepted' | 'declined';
-  sentAt: string | null;
+  sentAt?: string | null;
   type: 'welcome' | 'notification' | 'reminder' | 'custom' | 'invite';
   read: boolean;
 
@@ -115,6 +112,6 @@ export interface Mail {
   projectRole?: string;
   invitationStatus?: "pending" | "accepted" | "declined"
 
-  createdAt: string;
-  updatedAt: string;
+  createdAt?: string;
+  updatedAt?: string;
 }

@@ -19,17 +19,21 @@ interface UserSearchBarByEmailProps {
   className?: string;
   selectedUsers?: User[];
   onUserRemove?: (userId: string) => void;
+  searchOnEnterOnly? : boolean
 }
 
 const UserSearchBarByEmail: React.FC<UserSearchBarByEmailProps> = ({
-  onUserSelect,  placeholder = 'Search users by email...',
+  onUserSelect,  
+  placeholder = 'Search users by email...',
   variant = 'default',
   size = 'md',
   showRecentSearches = true,
   className = '',
   selectedUsers = [],
   onUserRemove,
-}) => {const [searchTerm, setSearchTerm] = useState('');
+  searchOnEnterOnly = false
+}) => {
+  const [searchTerm, setSearchTerm] = useState('');
   const [searchResults, setSearchResults] = useState<User[]>([]);
   const [recentSearches, setRecentSearches] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -157,7 +161,8 @@ const UserSearchBarByEmail: React.FC<UserSearchBarByEmailProps> = ({
     );
   };
   return (
-    <div className={className}>      <Searchbar
+    <div className={className}>      
+    <Searchbar
         value={searchTerm}
         onChange={(value) => {
           setSearchTerm(value);
@@ -179,7 +184,7 @@ const UserSearchBarByEmail: React.FC<UserSearchBarByEmailProps> = ({
         onSuggestionSelect={(suggestion: any) => handleUserSelect(suggestion.userData)}
         highlightMatches={true}
         renderSuggestion={renderSuggestion}
-        searchOnEnterOnly={true} // Always use Enter to search to avoid partial email searches
+        searchOnEnterOnly={searchOnEnterOnly} // Always use Enter to search to avoid partial email searches
         onEnter={(value) => {
           console.log('Enter pressed with value:', value);
           searchUsers(value);

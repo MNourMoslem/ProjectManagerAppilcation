@@ -11,7 +11,8 @@ import {
   useColorScheme,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useProjectStore, ProjectMember } from '../../store/projectStore';
+import { useProjectStore } from '../../store/projectStore';
+import  { ProjectMember } from "@/interfaces/interfaces"
 import MemberCard from '../members/MemberCard';
 import MemberForm, { MemberFormData } from '../forms/MemberForm';
 

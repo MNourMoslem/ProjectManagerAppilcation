@@ -12,10 +12,11 @@ import {
   ScrollView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useProjectStore, Task, ProjectMember } from '../../store/projectStore';
-import TaskCard, { Task as TaskCardTask } from '../tasks/TaskCard';
+import { useProjectStore } from '../../store/projectStore';
+import TaskCard from '../tasks/TaskCard';
 import TaskForm, { TaskFormData } from '../forms/TaskForm';
 import { Picker } from '@react-native-picker/picker';
+import { Task, ProjectMember } from '@/interfaces/interfaces'
 
 interface TasksTabProps {
   projectId: string;
@@ -67,7 +68,8 @@ const TasksTab: React.FC<TasksTabProps> = ({ projectId }) => {
     if (!editingTask) return;
     
     try {
-      await updateTask(editingTask._id, {
+      await updateTask(editingTask._id, 
+      {
         ...taskData,
         projectId,
       });
@@ -98,29 +100,12 @@ const TasksTab: React.FC<TasksTabProps> = ({ projectId }) => {
     );
   };
 
-  // Convert store Task to TaskCard Task format
-  const convertTaskToCardFormat = (task: Task): TaskCardTask => {
-    return {
-      _id: task._id,
-      title: task.title,
-      description: task.description,
-      status: task.status === 'cancelled' ? 'todo' : task.status,
-      priority: task.priority,
-      dueDate: task.dueDate || null,
-      assignedTo: task.assignedTo ? [task.assignedTo] : [],
-      tags: [], // Store doesn't have tags yet
-      createdAt: new Date(task.createdAt),
-      updatedAt: new Date(task.updatedAt),
-    };
-  };
-
   const filteredTasks = tasks
     .filter(task => {
       const matchesStatus = statusFilter === 'all' || task.status === statusFilter;
       const matchesPriority = priorityFilter === 'all' || task.priority === priorityFilter;
       return matchesStatus && matchesPriority;
     })
-    .map(convertTaskToCardFormat);
 
   const statusOptions = [
     { value: 'all', label: 'All Status' },
@@ -339,8 +324,8 @@ const TasksTab: React.FC<TasksTabProps> = ({ projectId }) => {
                 description: editingTask.description,
                 priority: editingTask.priority,
                 dueDate: editingTask.dueDate || null,
-                assignedTo: editingTask.assignedTo ? [editingTask.assignedTo._id] : [],
-                tags: [], // Store doesn't have tags yet
+                assignedTo: editingTask.assignedTo || [],
+                tags: editingTask.tags || [],
               }}
               onSubmit={handleUpdateTask}
             />

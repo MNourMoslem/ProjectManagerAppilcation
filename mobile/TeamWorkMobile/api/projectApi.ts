@@ -212,4 +212,61 @@ export const userAPI = {
   getLastSearchedUsers: async () => {
     return apiRequest('/auth/last-searched-users');
   },
+};
+
+// Mail API calls - matching the web frontend structure
+export const mailAPI = {
+  // Get received mails
+  getReceived: async () => {
+    return apiRequest('/mails/received');
+  },
+  
+  // Get sent mails
+  getSent: async () => {
+    return apiRequest('/mails/sent');
+  },
+  
+  // Mark mail as read
+  markAsRead: async (mailId: string) => {
+    return apiRequest(`/mails/read/${mailId}`, 'PATCH');
+  },
+  
+  // Accept invitation
+  acceptInvite: async (mailId: string) => {
+    return apiRequest('/mails/accept-invite', 'POST', { mailId });
+  },
+
+  // Reject invitation
+  declineInvite: async (mailId: string) => {
+    return apiRequest('/mails/decline-invite', 'POST', { mailId });
+  },
+  
+  // Delete mail
+  delete: async (mailId: string) => {
+    return apiRequest(`/mails/${mailId}`, 'DELETE');
+  },
+  
+  // Send custom email
+  sendCustom: async (emailData: {
+    recipients: string[];
+    subject: string;
+    body: string;
+    type: string;
+    projectId?: string;
+  }) => {
+    return apiRequest('/mails/send-custom', 'POST', emailData);
+  },
+  
+  // Send invite email
+  sendInvite: async (projectId: string, userEmail: string, role: string) => {
+    return apiRequest('/mails/send-invite', 'POST', { projectId, userEmail, role });
+  },
+  
+  // Update custom mail
+  updateCustom: async (mailId: string, emailData: {
+    subject: string;
+    body: string;
+  }) => {
+    return apiRequest(`/mails/update-custom/${mailId}`, 'PUT', emailData);
+  },
 }; 

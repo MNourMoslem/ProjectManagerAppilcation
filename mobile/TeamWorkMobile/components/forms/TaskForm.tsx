@@ -14,13 +14,7 @@ import { Picker } from '@react-native-picker/picker';
 import TagInput from './TagInput';
 import DatePicker from './DatePicker';
 import MemberSelection from '../members/MemberSelection';
-
-interface User {
-  _id: string;
-  name: string;
-  email: string;
-  avatar?: string;
-}
+import { User } from '@/interfaces/interfaces';
 
 export interface TaskFormData {
   projectId: string;
@@ -28,7 +22,7 @@ export interface TaskFormData {
   description: string;
   priority: 'no-priority' | 'low' | 'medium' | 'high' | 'urgent';
   dueDate: Date | null;
-  assignedTo: string[];
+  assignedTo: User[];
   tags: string[];
 }
 
@@ -283,7 +277,7 @@ export const TaskForm: React.FC<TaskFormProps> = ({
           </Text>
           <MemberSelection
             members={members}
-            selectedMemberIds={formData.assignedTo}
+            selectedMemberIds={formData.assignedTo.map(member => member._id)}
             onMemberSelectionChange={(selectedIds) => handleChange('assignedTo', selectedIds)}
             disabled={isSubmitting}
           />

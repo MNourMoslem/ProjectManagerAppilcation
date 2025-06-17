@@ -39,13 +39,15 @@ function TasksTable({ tasks, onEdit, onEditCondition, onDelete, onDeleteConditio
       accessor: (task) => {        const statusStyles = {
           'todo': 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400',
           'in-progress': 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
-          'done': 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+          'done': 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
+          'cancelled' : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
         };
         
         const statusLabels = {
           'todo': 'To Do',
           'in-progress': 'In Progress',
-          'done': 'Done'
+          'done': 'Done',
+          'cancelled' : 'Cancelled'
         };
         
         return (
