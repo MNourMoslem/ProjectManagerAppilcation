@@ -1,7 +1,5 @@
 # TeamWork – Project Management App (Web Frontend)
 
-![TeamWork Logo](../assets/images/icon.png)
-
 > **TeamWork** is a modern, full-featured project management application for teams, built for both web and mobile. This README covers the **web frontend** (React + TypeScript + Vite) – a beautiful, fast, and highly interactive interface for managing projects, tasks, teams, and more.
 
 ---
