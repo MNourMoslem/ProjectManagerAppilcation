@@ -19,15 +19,14 @@
 
 ---
 
-## 🌐 Live Demo
-
-> [🔗 Demo Link (Coming Soon)](https://your-demo-url.com)
-
----
-
 ## 📸 Screenshots
 
-> _Add screenshots here to showcase the dashboard, project/task pages, and UI components._
+![4](https://github.com/user-attachments/assets/8e3ba233-89d1-4cee-9795-985321dc9f50)
+![3](https://github.com/user-attachments/assets/427b7ec0-de48-40a2-a629-f7702f9ab3f1)
+![2](https://github.com/user-attachments/assets/e32655ea-f240-4984-b14f-6cc60c2a6ff8)
+![1](https://github.com/user-attachments/assets/d44d5f4d-8318-4193-af76-65f911eec42d)
+![5](https://github.com/user-attachments/assets/6ceac53a-60d2-40a3-91c3-825270c4baca)
+
 
 ---
 
