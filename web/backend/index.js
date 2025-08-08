@@ -4,6 +4,8 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import path from "path";
 
+dotenv.config(); // Load environment variables
+
 import { connectDB } from "./src/db/connectdb.js";
 import { setupNotificationJobs } from "./src/jobs/notificationJobs.js";
 
@@ -21,8 +23,13 @@ const PORT = process.env.PORT || 8080;
 
 const app = express();
 
+// Configure CORS origins from environment variable
+const allowedOrigins = process.env.CORS_ORIGINS 
+  ? process.env.CORS_ORIGINS.split(',')
+  : ['http://localhost:5173', 'http://localhost:8081', 'exp://localhost:8081'];
+
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://localhost:8081', 'exp://localhost:8081'],
+  origin: allowedOrigins,
   credentials: true, // Important for cookies/auth
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', "PATCH"],
   allowedHeaders: ['Content-Type', 'Authorization']
