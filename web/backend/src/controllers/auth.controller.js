@@ -27,25 +27,31 @@ export const signup = async (req, res) => {
 		}
 
 		const hashedPassword = await bcryptjs.hash(password, 10);
-		const verificationToken = Math.floor(100000 + Math.random() * 900000).toString();
+		// Skip verification for portfolio - comment out verification token generation
+		// const verificationToken = Math.floor(100000 + Math.random() * 900000).toString();
 
 		const user = new User({
 			email,
 			password: hashedPassword,
 			name,
-			verificationToken,
-			verificationTokenExpiresAt: Date.now() + 24 * 60 * 60 * 1000, // 24 hours
+			// Skip verification token fields for portfolio
+			// verificationToken,
+			// verificationTokenExpiresAt: Date.now() + 24 * 60 * 60 * 1000, // 24 hours
 		});
 
 		await user.save();
 
 		const token = generateTokenAndSetCookie(res, user._id);
 
-		await sendVerificationEmail(user.email, verificationToken);
+		// Skip email verification for portfolio
+		// await sendVerificationEmail(user.email, verificationToken);
+
+		// Send welcome email directly since we're skipping verification
+		await sendWelcomeEmail(user.email, user.name);
 
 		res.status(201).json({
 			success: true,
-			message: "User created successfully",
+			message: "User created successfully - Welcome to TeamWork!",
 			user: {
 				...user._doc,
 				password: undefined,

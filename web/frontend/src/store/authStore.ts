@@ -29,7 +29,8 @@ interface AuthState {
   logout: () => void;
   resetPassword: (email: string) => Promise<void>;
   setNewPassword: (token: string, newPassword: string) => Promise<void>;
-  verifyEmail: (token: string) => Promise<void>;
+  // Commented out for portfolio - skip email verification
+  // verifyEmail: (token: string) => Promise<void>;
   updateUser: (userData: Partial<User>) => Promise<void>;
   changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
   fetchUser: () => Promise<void>;
@@ -265,6 +266,8 @@ export const useAuthStore = create<AuthState>()(
         }
       },
 
+      // Commented out for portfolio - skip email verification
+      /*
       verifyEmail: async (token) => {
         set({ isLoading: true, error: null });
         try {
@@ -298,20 +301,26 @@ export const useAuthStore = create<AuthState>()(
             throw new Error(data.message || 'Email verification failed');
           }
           
-          set({ 
+          // Update auth state with verified user
+          set({
             isLoading: false,
             isAuthenticated: true,
             user: data.user,
             token: data.token
           });
-        } catch (error) {
+        } catch (error: any) {
           console.error('Email verification error:', error);
           set({ 
             isLoading: false, 
             error: error instanceof Error ? error.message : 'An error occurred during email verification' 
           });
         }
-      },      updateUser: async (userData) => {
+      },
+      */
+
+      // Email verification skipped for portfolio
+
+      updateUser: async (userData) => {
         set({ isLoading: true, error: null });
         try {
           const token = localStorage.getItem('auth-token');

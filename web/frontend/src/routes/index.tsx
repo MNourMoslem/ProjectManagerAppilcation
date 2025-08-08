@@ -3,8 +3,9 @@ import LoginPage from './auth/LoginPage';
 import SignupPage from './auth/SignupPage';
 import ResetPasswordPage from './auth/ResetPasswordPage';
 import SetNewPasswordPage from './auth/SetNewPasswordPage';
-import EmailVerificationPage from './auth/EmailVerificationPage';
-import VerificationSentPage from './auth/VerificationSentPage';
+// Commented out for portfolio - skip email verification
+// import EmailVerificationPage from './auth/EmailVerificationPage';
+// import VerificationSentPage from './auth/VerificationSentPage';
 import ProfilePage from './profile/ProfilePage';
 import AuthGuard from '../guards/AuthGuard';
 import GuestGuard from '../guards/GuestGuard';
@@ -52,11 +53,12 @@ const AppRoutes = () => {
         <Route path="/auth/signup" element={<SignupPage />} />
         <Route path="/auth/reset-password" element={<ResetPasswordPage />} />
         <Route path="/auth/set-new-password/:token" element={<SetNewPasswordPage />} />
-        <Route path="/auth/verification-sent" element={<VerificationSentPage />} />
+        {/* Commented out for portfolio - skip email verification */}
+        {/* <Route path="/auth/verification-sent" element={<VerificationSentPage />} /> */}
       </Route>
 
-      {/* Email verification routes (accessible to both authenticated and non-authenticated users) */}
-      <Route path="/auth/email-verification/:token" element={<EmailVerificationPage />} />
+      {/* Email verification routes - commented out for portfolio */}
+      {/* <Route path="/auth/email-verification/:token" element={<EmailVerificationPage />} /> */}
 
       {/* Protected routes (only accessible to authenticated users) */}      
       <Route element={<AuthGuard />}>        

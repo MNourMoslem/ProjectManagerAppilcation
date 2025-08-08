@@ -67,7 +67,8 @@ const SignupPage = () => {
 
     if (validateForm()) {
       await signup(name, email, password);
-      navigate('/auth/verification-sent');
+      // Skip verification - go directly to dashboard for portfolio
+      navigate('/dashboard');
     }
   };
 
