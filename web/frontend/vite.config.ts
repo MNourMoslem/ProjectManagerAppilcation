@@ -8,6 +8,8 @@ export default defineConfig({
     react(),
     tailwindcss(),
   ],
+  // Set base to relative path for static file serving
+  base: './',
   // Optimize build for production
   build: {
     outDir: 'dist',
