@@ -1,5 +1,5 @@
-// Base URL for API calls
-const API_BASE_URL = 'http://localhost:5000/api';
+// Base URL for API calls - use environment variable or fallback to localhost
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 // Helper function for API calls
 export const apiCall = async (endpoint: string, method: string = 'GET', body?: any) => {

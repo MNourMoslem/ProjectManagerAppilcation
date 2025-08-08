@@ -1,8 +1,8 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-// API URL - use an environment variable or default to localhost
-const API_URL = 'http://localhost:5000/api';
+// API URL - use environment variable or fallback to localhost
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 // Define User interface based on the User schema
 interface User {

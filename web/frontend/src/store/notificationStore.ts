@@ -2,7 +2,8 @@ import { create } from 'zustand';
 import axios from 'axios';
 
 // API URL
-const API_URL = 'http://localhost:5000/api';
+// API URL - use environment variable or fallback to localhost
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 export interface Notification {
   _id: string;
