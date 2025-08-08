@@ -92,6 +92,18 @@ export const useAuthStore = create<AuthState>()(
           
           // Store the token in localStorage for use in requests
           localStorage.setItem('auth-token', data.token);
+          
+          // Debug logging for production
+          if (import.meta.env.VITE_NODE_ENV === 'production') {
+            console.log('Login successful, token stored:', {
+              hasToken: !!data.token,
+              tokenPreview: data.token ? `${data.token.substring(0, 10)}...` : 'none',
+              localStorage: {
+                authToken: !!localStorage.getItem('auth-token'),
+                token: !!localStorage.getItem('token')
+              }
+            });
+          }
 
           set({ 
             isLoading: false,
@@ -179,8 +191,9 @@ export const useAuthStore = create<AuthState>()(
             console.error('Logout error:', error);
           });
           
-          // Remove token from localStorage
+          // Remove token from localStorage (clean up both possible keys)
           localStorage.removeItem('auth-token');
+          localStorage.removeItem('token');
         }
           console.log('User logged out');
         set({ 
@@ -323,7 +336,7 @@ export const useAuthStore = create<AuthState>()(
       updateUser: async (userData) => {
         set({ isLoading: true, error: null });
         try {
-          const token = localStorage.getItem('auth-token');
+          const token = localStorage.getItem('auth-token') || localStorage.getItem('token');
           
           // Use mock data if flag is set
           if (USE_MOCK_API) {
@@ -370,7 +383,7 @@ export const useAuthStore = create<AuthState>()(
       },      changePassword: async (currentPassword, newPassword) => {
         set({ isLoading: true, error: null });
         try {
-          const token = localStorage.getItem('auth-token');
+          const token = localStorage.getItem('auth-token') || localStorage.getItem('token');
           
           // Use mock data if flag is set
           if (USE_MOCK_API) {
@@ -439,8 +452,8 @@ export const useAuthStore = create<AuthState>()(
             return;
           }
           
-          // Get token from localStorage
-          const token = localStorage.getItem('auth-token');
+          // Get token from localStorage (try both keys for compatibility)
+          const token = localStorage.getItem('auth-token') || localStorage.getItem('token');
           if (!token) {
             throw new Error('No authentication token found');
           }
@@ -502,7 +515,7 @@ export const useAuthStore = create<AuthState>()(
 
 // Initialize auth state by checking localStorage
 export const initializeAuth = async () => {
-  const token = localStorage.getItem('auth-token');
+  const token = localStorage.getItem('auth-token') || localStorage.getItem('token');
   if (token) {
     // Token exists, try to fetch user data
     const authStore = useAuthStore.getState();
@@ -510,8 +523,9 @@ export const initializeAuth = async () => {
       await authStore.fetchUser();
     } catch (error) {
       console.error('Failed to initialize auth state:', error);
-      // Clear localStorage if token is invalid
+      // Clear localStorage if token is invalid (both keys)
       localStorage.removeItem('auth-token');
+      localStorage.removeItem('token');
     }
   }
 };
